@@ -17,7 +17,7 @@ const authMiddleware = {
     },
     veryfiAdminToken: (req, res, next) => {
         authMiddleware.veryfiToken(req, res, () => {
-            if ((req.user.id == req.params.id) || (req.user.roleID == 0)) {
+            if ((req.user.user_id == req.params.id) || (req.user.role == 'admin')) {
                 next();
             } else {
                 res.status(403).json("ko có quyền truy cap");
@@ -33,6 +33,7 @@ const authMiddleware = {
                     res.send("bạn đã đăng nhập nhưng phiên làm vc đã hết hạn");
                 }
                 req.user = data;
+
                 res.send("bạn đã đăng nhập").json(data);
             })
         } else {

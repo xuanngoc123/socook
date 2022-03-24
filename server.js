@@ -19,7 +19,7 @@ app.use(express.json())
 
 const host = process.env.HOST || 8080;
 
-app.use('/api', authRouter)
+app.use('/api/auth', authRouter)
 
 app.listen(host, () => {
     console.log(`App listen on port ${host}`);

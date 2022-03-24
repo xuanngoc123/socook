@@ -1,10 +1,11 @@
 {
     "development": {
         "username": "root",
-        "password": null,
-        "database": "test",
-        "host": "127.0.0.1",
-        "dialect": "mysql"
+        "password": "mot2ba4nam6",
+        "database": "recipedb",
+        "host": "aa5jr3ty3y77lr.cyfgjqbdi1mp.ap-southeast-1.rds.amazonaws.com",
+        "dialect": "mysql",
+        "define": {  "freezeTableName": true, "createdAt": false, "updatedAt": false, "id": false }
     },
     "test": {
         "username": "root",

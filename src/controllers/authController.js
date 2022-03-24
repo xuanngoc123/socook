@@ -7,7 +7,7 @@ const authController = {
             res.status(200).json(data)
 
         } catch (error) {
-            res.status(500).json("dang ki ko thanh cong")
+            res.status(500).json(error)
         }
     },
     loginUser: async (req, res) => {
@@ -35,7 +35,23 @@ const authController = {
         } catch (error) {
             res.status(500).json(error)
         }
-    }
+    },
+    resetPassword: async (req, res) => {
+        try {
+            let data = await authService.resolveResetPassword(req.body);
+            res.status(200).json(data)
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+    changePassword: async (req, res) => {
+        try {
+            let data = await authService.resolveChangePassword(req.body);
+            res.status(200).json(data)
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
 
 }
 
