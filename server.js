@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors({ origin: true }));
 app.use(express.json())
 
-const host = process.env.HOST || 8080;
+const host = process.env.PORT || 3000;
 
 app.use('/api/auth', authRouter)
 
