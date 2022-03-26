@@ -10,6 +10,7 @@ const connectDB = require('./src/config/connectDB')
 const path = require('path');
 const upload = require('./src/config/multer')
 
+app.use(express.static('./public'))
 
 
 app.use(bodyParser.json());
