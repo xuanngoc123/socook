@@ -12,14 +12,15 @@ router.get('/register', authMiddleware.checkToken, (req, res) => {
 router.post('/login', authController.loginUser);
 
 //change password
-router.put('/changepassword', authController.changePassword)
+router.put('/changepassword', authMiddleware.veryfiToken, authController.changePassword)
 
 //fogot password
 router.put('/resetpassword', authController.resetPassword)
 
+//check auth
+router.get('/checkauth', authController.checkToken);
 
-router.get('/user', authMiddleware.veryfiToken, authController.getUser);
-router.delete('/delete/:id', authMiddleware.veryfiAdminToken, authController.deleteUser);
+router.delete('/delete/:id', authMiddleware.veryfiTokenForDelete, authController.deleteUser);
 
 
 

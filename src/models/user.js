@@ -23,9 +23,12 @@ module.exports = (sequelize, DataTypes) => {
     introduction: DataTypes.TEXT,
     date_of_birth: DataTypes.DATE,
     city: DataTypes.STRING,
+    gender: DataTypes.INTEGER,
     district: DataTypes.STRING,
     avatar_image: DataTypes.TEXT,
-    cover_image: DataTypes.TEXT
+    cover_image: DataTypes.TEXT,
+    create_time: DataTypes.DATE,
+    last_update: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'User',

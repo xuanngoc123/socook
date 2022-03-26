@@ -8,7 +8,7 @@ const authService = {
     resolveRegisterUser: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
-                const email = data.email;
+                const email = data.body.email;
                 let findUser = await db.Login_info.findOne({
                     attributes: { email },
                     where: { email: email },
@@ -16,10 +16,11 @@ const authService = {
                 });
                 if (!findUser) {
                     let salt = await bcrypt.genSalt(10);
-                    let password = await bcrypt.hash(data.password, salt);
+                    let password = await bcrypt.hash(data.body.password, salt);
                     let count = await db.User.max('user_id') + 1;
                     let createUser = await db.User.create({
                         user_id: count,
+                        create_time: Date.now(),
                     })
                     if (!createUser) {
                         resolve({
@@ -29,8 +30,8 @@ const authService = {
                     } else {
                         let createLoginInfo = await db.Login_info.create({
                             user_id: count,
-                            user_name: data.user_name,
-                            email: data.email,
+                            user_name: data.body.user_name,
+                            email: data.body.email,
                             encrypted_password: password,
                             role: 'user',
                         })
@@ -85,8 +86,8 @@ const authService = {
     resolveLoginUser: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let email = data.email;
-                let password = data.password;
+                let email = data.body.email;
+                let password = data.body.password;
                 let findUser = await db.Login_info.findOne({
                     where: { email: email },
                     raw: true,
@@ -133,7 +134,7 @@ const authService = {
     resolveResetPassword: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let email = data.email;
+                let email = data.body.email;
                 var user = await db.Login_info.findOne({
                     where: { email: email },
                 });
@@ -165,9 +166,8 @@ const authService = {
                             message: "reset password fail!"
                         })
                     }
-
                     let info = await transporter.sendMail({
-                        from: '"Cook Social"', // sender address
+                        from: '"Cook Social" <admin>', // sender address
                         to: `${user.email}`, // list of receivers
                         subject: "Reset Password", // Subject line
                         text: "Đây là mật khẩu mới của bạn: ", // plain text body
@@ -184,6 +184,7 @@ const authService = {
                             message: "sent password fail!",
                         });
                     }
+
                 }
             } catch (error) {
                 console.log("err reset pass: " + error)
@@ -197,7 +198,7 @@ const authService = {
     resolveChangePassword: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let email = data.email;
+                let email = data.user.email;
                 var user = await db.Login_info.findOne({
                     where: { email: email },
                 });
@@ -207,8 +208,8 @@ const authService = {
                         message: "email invalid!"
                     })
                 } else {
-                    let password = data.password;
-                    let newPassword = data.newPassword;
+                    let password = data.body.password;
+                    let newPassword = data.body.newPassword;
 
                     let checkPassword = await bcrypt.compare(password, user.encrypted_password);
 
@@ -245,18 +246,28 @@ const authService = {
             }
         })
     },
-    resolveGetUser: async () => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let data = await db.user.findAll({
-                    raw: true
-                })
-                resolve(data);
-            } catch (error) {
-                reject(error)
-            }
-        })
-    },
+    // resolveCheckToken: async (data) => {
+    //     return new Promise(async (resolve, reject) => {
+    //         try {
+    //             let token = data.token;
+    //             if (token) {
+    //                 const accessToken = token.split(" ")[1];
+    //                 jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY, (err, data) => {
+    //                     if (err) {
+    //                         res.status(403).json("token ko hop le");
+    //                     }
+    //                     req.user = data;
+    //                     next();
+    //                 })
+    //             } else {
+    //                 res.status(401).json("ban chua duoc xac thuc");
+    //             }
+    //         } catch (error) {
+    //             reject(error)
+    //         }
+    //     })
+    // },
+
     resolveDeleteUser: (userid) => {
         return new Promise(async (resolve, reject) => {
             try {

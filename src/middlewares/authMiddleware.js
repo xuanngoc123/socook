@@ -2,25 +2,28 @@ const jwt = require('jsonwebtoken')
 const authMiddleware = {
     veryfiToken: (req, res, next) => {
         const token = req.headers.token;
+        if (!token) {
+            res.status(401).json("you are not authenticate!");
+        }
         if (token) {
             const accessToken = token.split(" ")[1];
             jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY, (err, data) => {
                 if (err) {
-                    res.status(403).json("token ko hop le");
+                    res.status(403).json("token invalid!");
+                } else {
+                    req.user = data;
+                    next();
                 }
-                req.user = data;
-                next();
+
             })
-        } else {
-            res.status(401).json("ban chua duoc xac thuc");
         }
     },
-    veryfiAdminToken: (req, res, next) => {
+    veryfiTokenForDelete: (req, res, next) => {
         authMiddleware.veryfiToken(req, res, () => {
             if ((req.user.user_id == req.params.id) || (req.user.role == 'admin')) {
                 next();
             } else {
-                res.status(403).json("ko có quyền truy cap");
+                res.status(403).json("you are not allowed");
             }
         })
     },
@@ -30,14 +33,25 @@ const authMiddleware = {
             const accessToken = token.split(" ")[1];
             jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY, (err, data) => {
                 if (err) {
-                    res.send("bạn đã đăng nhập nhưng phiên làm vc đã hết hạn");
-                }
-                req.user = data;
-
-                res.send("bạn đã đăng nhập").json(data);
+                    req.result = {
+                        messageCode: 2,
+                        message: "token invalid!"
+                    }
+                    next();
+                };
+                req.result = {
+                    user: data,
+                    messageCode: 1,
+                    message: "token valid!"
+                };
+                next();
             })
         } else {
-            res.send("bạn chưa đăng nhập");
+            req.result = {
+                messageCode: 0,
+                message: "you are not authenticate!"
+            }
+            next();
         }
     },
 }
