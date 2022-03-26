@@ -137,7 +137,7 @@ const userService = {
                     })
                 }
                 const host = req.hostname;
-                const filePath = req.protocol + "://" + host + `:${process.env.PORT}` + '/uploads/' + req.file.filename;
+                const filePath = req.protocol + "://" + host + '/uploads/' + req.file.filename;
                 user.avatar_image = filePath;
                 let checkChangeAvatar = await user.save();
                 if (!checkChangeAvatar) {
