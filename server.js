@@ -9,13 +9,15 @@ const cors = require('cors')
 const connectDB = require('./src/config/connectDB')
 const path = require('path');
 const upload = require('./src/config/multer')
+const fs = require('fs');
+try {
+    fs.mkdirSync(path.join(__dirname, '/public/uploads/'))
+} catch (err) {
+    console.log(err)
+    if (err.code !== 'EEXIST') throw err
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'build')));
-} else {
-    app.use(express.static('./public'));
 }
-
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
