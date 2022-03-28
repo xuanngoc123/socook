@@ -10,7 +10,11 @@ const connectDB = require('./src/config/connectDB')
 const path = require('path');
 const upload = require('./src/config/multer')
 
-app.use(express.static('./public'))
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.resolve(__dirname, 'build')));
+} else {
+    app.use(express.static('./public'));
+}
 
 
 app.use(bodyParser.json());
@@ -34,11 +38,12 @@ app.use('/api/auth', authRouter)
 app.use('/api/user', userRouter)
 app.use('/api/recipe', recipeRouter)
 
-app.post('/upload', upload.single('image'), (req, res) => {
-    console.log(req.file);
-    console.log(req.body.email)
+app.post('/upload', upload.array('image'), (req, res) => {
+    console.log(req.files.length);
+
     res.send("Bấm vào link làm gì ^.^");
 })
+app.get("/", express.static(path.join(__dirname, "./public")));
 
 app.listen(host, () => {
     console.log(`App listen on port ${host}`);

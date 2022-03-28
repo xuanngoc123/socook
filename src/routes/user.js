@@ -16,5 +16,7 @@ router.get('/user-info', userController.getUserInfo);
 //upload avater image 
 router.post('/avatar', authMiddleware.veryfiToken, upload.single('image'), userController.changeAvatar)
 
+router.post('/cover-image', authMiddleware.veryfiToken, upload.single('image'), userController.changeCoverImage)
+
 router.get('/user/:user_id', userController.getUserInfoByParams);
 module.exports = router;

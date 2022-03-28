@@ -40,6 +40,14 @@ const userController = {
             res.status(500).json(error)
         }
     },
+    changeCoverImage: async (req, res) => {
+        try {
+            let data = await userService.resolveChangeCoverImage(req);
+            res.status(200).json(data);
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
 
 }
 

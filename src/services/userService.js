@@ -161,6 +161,44 @@ const userService = {
             }
         })
     },
+    resolveChangeCoverImage: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let user_id = req.user.user_id;
+                let user = await db.User.findOne({
+                    where: { user_id: user_id }
+                })
+                if (!user) {
+                    resolve({
+                        messageCode: 2,
+                        message: 'user not found!'
+                    })
+                }
+                const host = req.hostname;
+                const filePath = req.protocol + "://" + host + '/uploads/' + req.file.filename;
+                user.cover_image = filePath;
+                let checkChangeAvatar = await user.save();
+                if (!checkChangeAvatar) {
+                    reject({
+                        messageCode: 0,
+                        message: 'change avatar fail!'
+                    })
+                }
+                else {
+                    resolve({
+                        messageCode: 1,
+                        message: 'change avatar success!'
+                    })
+                }
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'change avatar fail!'
+                })
+            }
+        })
+    },
 }
 
 module.exports = userService
