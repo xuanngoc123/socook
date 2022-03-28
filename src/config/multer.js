@@ -14,7 +14,7 @@ const path = require('path');
 if (process.env.NODE_ENV === 'production') {
     var storage = multer.diskStorage({
         destination: function (req, file, cb) {
-            cb(null, path.resolve(__dirname, 'build'))
+            cb(null, "./build")
         },
         filename: function (req, file, cb) {
             cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));

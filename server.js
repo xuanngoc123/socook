@@ -43,7 +43,6 @@ app.post('/upload', upload.array('image'), (req, res) => {
 
     res.send("Bấm vào link làm gì ^.^");
 })
-app.get("/", express.static(path.join(__dirname, "./public")));
 
 app.listen(host, () => {
     console.log(`App listen on port ${host}`);
