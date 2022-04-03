@@ -1,4 +1,4 @@
-const { changeAvatar } = require('../controllers/userController')
+const { getUrlImage } = require('../config/multer')
 const db = require('../models/index')
 
 const userService = {
@@ -15,6 +15,11 @@ const userService = {
                         message: 'user not found!'
                     })
                 }
+                let keyImgAvt = user.avatar_image;
+                let keyImgCover = user.cover_image;
+
+                if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
+                if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
                 resolve({
                     messageCode: 1,
                     message: 'get my info success!',
@@ -84,6 +89,11 @@ const userService = {
                         message: 'user not found!'
                     })
                 }
+                let keyImgAvt = user.avatar_image;
+                let keyImgCover = user.cover_image;
+
+                if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
+                if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
                 resolve({
                     messageCode: 1,
                     message: 'get user info success!',
@@ -135,28 +145,36 @@ const userService = {
                         messageCode: 2,
                         message: 'user not found!'
                     })
-                }
-                const host = req.hostname;
-                const filePath = req.protocol + "://" + host + '/uploads/' + req.file.filename;
-                user.avatar_image = filePath;
-                let checkChangeAvatar = await user.save();
-                if (!checkChangeAvatar) {
-                    reject({
-                        messageCode: 0,
-                        message: 'change avatar fail!'
-                    })
-                }
-                else {
-                    resolve({
-                        messageCode: 1,
-                        message: 'change avatar success!'
-                    })
+                } else {
+                    let result = req.file;
+                    if (!result) {
+                        resolve({
+                            messageCode: 3,
+                            message: 'upload image fail!'
+                        })
+                    }
+                    else {
+                        user.avatar_image = result.key;
+                        let checkChangeAvatar = await user.save();
+                        if (!checkChangeAvatar) {
+                            reject({
+                                messageCode: 0,
+                                message: 'change image fail!'
+                            })
+                        }
+                        else {
+                            resolve({
+                                messageCode: 1,
+                                message: 'change image success!'
+                            })
+                        }
+                    }
                 }
             } catch (error) {
                 console.log(error)
                 reject({
                     messageCode: 0,
-                    message: 'change avatar fail!'
+                    message: 'change image fail!'
                 })
             }
         })
@@ -173,28 +191,36 @@ const userService = {
                         messageCode: 2,
                         message: 'user not found!'
                     })
-                }
-                const host = req.hostname;
-                const filePath = req.protocol + "://" + host + '/uploads/' + req.file.filename;
-                user.cover_image = filePath;
-                let checkChangeAvatar = await user.save();
-                if (!checkChangeAvatar) {
-                    reject({
-                        messageCode: 0,
-                        message: 'change avatar fail!'
-                    })
-                }
-                else {
-                    resolve({
-                        messageCode: 1,
-                        message: 'change avatar success!'
-                    })
+                } else {
+                    let result = req.file;
+                    if (!result) {
+                        resolve({
+                            messageCode: 3,
+                            message: 'upload image fail!'
+                        })
+                    }
+                    else {
+                        user.cover_image = result.key;
+                        let checkChangImage = await user.save();
+                        if (!checkChangImage) {
+                            reject({
+                                messageCode: 0,
+                                message: 'change image fail!'
+                            })
+                        }
+                        else {
+                            resolve({
+                                messageCode: 1,
+                                message: 'change image success!'
+                            })
+                        }
+                    }
                 }
             } catch (error) {
                 console.log(error)
                 reject({
                     messageCode: 0,
-                    message: 'change avatar fail!'
+                    message: 'change image fail!'
                 })
             }
         })

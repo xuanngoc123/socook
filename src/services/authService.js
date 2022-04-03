@@ -3,6 +3,7 @@ const { promise, reject } = require("bcrypt/promises");
 const db = require('../models/index')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
+const { getUrlImage } = require("../config/multer");
 
 const authService = {
     resolveRegisterUser: async (data) => {
@@ -19,7 +20,7 @@ const authService = {
                     let password = await bcrypt.hash(data.body.password, salt);
                     let count = await db.User.max('user_id') + 1;
                     let createUser = await db.User.create({
-                        user_id: count,
+                        // user_id: count,
                         create_time: Date.now(),
                     })
                     if (!createUser) {
@@ -29,7 +30,7 @@ const authService = {
                         })
                     } else {
                         let createLoginInfo = await db.Login_info.create({
-                            user_id: count,
+                            user_id: createUser.user_id,
                             user_name: data.body.user_name,
                             email: data.body.email,
                             encrypted_password: password,
@@ -70,7 +71,7 @@ const authService = {
             role: user.role,
         },
             process.env.ACCESS_TOKEN_KEY,
-            { expiresIn: '600s' }
+            { expiresIn: '84600s' }
         )
     },
     generateRefreshToken: (user) => {
@@ -104,6 +105,8 @@ const authService = {
                             where: { user_id: findUser.user_id },
                             raw: true,
                         })
+                        if (infoUser.avatar_image) infoUser.avatar_image = getUrlImage(infoUser.avatar_image);
+                        if (infoUser.cover_image) infoUser.cover_image = getUrlImage(infoUser.cover_image);
                         const accessToken = authService.generateAccessToken(findUser);
                         const refreshToken = authService.generateRefreshToken(findUser);
                         resolve({

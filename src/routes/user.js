@@ -1,7 +1,7 @@
 const express = require('express')
 const authMiddleware = require('../middlewares/authMiddleware')
 const userController = require('../controllers/userController');
-const upload = require('../config/multer');
+const { upload } = require('../config/multer');
 let router = express.Router();
 
 //get my info

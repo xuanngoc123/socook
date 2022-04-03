@@ -12,13 +12,14 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       // this.belongsTo(models.user);
-      
+
     }
   }
   Login_info.init({
     user_id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true
     },
     user_name: DataTypes.STRING,
     encrypted_password: DataTypes.STRING,

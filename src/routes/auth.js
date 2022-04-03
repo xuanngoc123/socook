@@ -5,7 +5,7 @@ const authController = require('../controllers/authController')
 //register
 router.post('/register', authController.registerUser);
 router.get('/register', authMiddleware.checkToken, (req, res) => {
-    console.log(req.user);
+    res.status(200).json(req.user);
 });
 
 //login
