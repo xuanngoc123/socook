@@ -9,12 +9,6 @@ const userService = {
                     where: { user_id: data.user.user_id },
                     raw: true
                 })
-                if (!user) {
-                    resolve({
-                        messageCode: 2,
-                        message: 'user not found!'
-                    })
-                }
                 let keyImgAvt = user.avatar_image;
                 let keyImgCover = user.cover_image;
 
@@ -26,7 +20,7 @@ const userService = {
                     user: user,
                 });
             } catch (error) {
-                console.log("getMyInfo: " + error);
+                console.log(error);
                 reject({
                     messageCode: 0,
                     message: 'get my info fail!'
@@ -36,17 +30,12 @@ const userService = {
     },
     resolveChangeMyInfo: async (data) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let user_id = data.user.user_id;
                 let user = await db.User.findOne({
                     where: { user_id: user_id },
                 })
-                if (!user) {
-                    resolve({
-                        messageCode: 2,
-                        message: 'user not found!'
-                    })
-                }
 
                 user.full_name = data.body.full_name;
                 user.introduction = data.body.introduction;
@@ -56,19 +45,15 @@ const userService = {
                 user.district = data.body.district;
                 user.last_update = Date.now();
 
-                let checkChangeMyInfo = await user.save();
-                if (!checkChangeMyInfo) {
-                    resolve({
-                        messageCode: 0,
-                        message: 'change info fali!'
-                    })
-                }
+                await user.save({ transaction });
+                await transaction.commit();
                 resolve({
                     messageCode: 1,
                     message: 'change info success!'
                 })
             } catch (error) {
-                console.log("change my info" + error);
+                console.log(error);
+                await transaction.rollback();
                 reject(resolve({
                     messageCode: 0,
                     message: 'change info fali!'
@@ -100,32 +85,7 @@ const userService = {
                     user: user,
                 });
             } catch (error) {
-                reject({
-                    messageCode: 0,
-                    message: 'get user info fail!'
-                })
-            }
-        })
-    },
-    resolveGetUserInfoByParams: async (req) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let user = await db.User.findOne({
-                    where: { user_id: req.params.user_id },
-                    raw: true,
-                })
-                if (!user) {
-                    resolve({
-                        messageCode: 2,
-                        message: 'user not found!'
-                    })
-                }
-                resolve({
-                    messageCode: 1,
-                    message: 'get user info success!',
-                    user: user,
-                });
-            } catch (error) {
+                console.log(error)
                 reject({
                     messageCode: 0,
                     message: 'get user info fail!'
@@ -135,43 +95,34 @@ const userService = {
     },
     resolveChangeAvatar: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let user_id = req.user.user_id;
                 let user = await db.User.findOne({
                     where: { user_id: user_id }
                 })
-                if (!user) {
+
+                let result = req.file;
+                if (!result) {
                     resolve({
                         messageCode: 2,
-                        message: 'user not found!'
+                        message: 'upload image fail!'
                     })
-                } else {
-                    let result = req.file;
-                    if (!result) {
-                        resolve({
-                            messageCode: 3,
-                            message: 'upload image fail!'
-                        })
-                    }
-                    else {
-                        user.avatar_image = result.key;
-                        let checkChangeAvatar = await user.save();
-                        if (!checkChangeAvatar) {
-                            reject({
-                                messageCode: 0,
-                                message: 'change image fail!'
-                            })
-                        }
-                        else {
-                            resolve({
-                                messageCode: 1,
-                                message: 'change image success!'
-                            })
-                        }
-                    }
                 }
+                else {
+                    user.avatar_image = result.key;
+                    await user.save({ transaction });
+                    await transaction.commit();
+                    resolve({
+                        messageCode: 1,
+                        message: 'change image success!'
+                    })
+
+                }
+
             } catch (error) {
                 console.log(error)
+                await transaction.rollback()
                 reject({
                     messageCode: 0,
                     message: 'change image fail!'
@@ -181,43 +132,32 @@ const userService = {
     },
     resolveChangeCoverImage: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let user_id = req.user.user_id;
                 let user = await db.User.findOne({
                     where: { user_id: user_id }
                 })
-                if (!user) {
+
+                let result = req.file;
+                if (!result) {
                     resolve({
                         messageCode: 2,
-                        message: 'user not found!'
+                        message: 'upload image fail!'
                     })
-                } else {
-                    let result = req.file;
-                    if (!result) {
-                        resolve({
-                            messageCode: 3,
-                            message: 'upload image fail!'
-                        })
-                    }
-                    else {
-                        user.cover_image = result.key;
-                        let checkChangImage = await user.save();
-                        if (!checkChangImage) {
-                            reject({
-                                messageCode: 0,
-                                message: 'change image fail!'
-                            })
-                        }
-                        else {
-                            resolve({
-                                messageCode: 1,
-                                message: 'change image success!'
-                            })
-                        }
-                    }
+                }
+                else {
+                    user.cover_image = result.key;
+                    await user.save({ transaction });
+                    await transaction.commit();
+                    resolve({
+                        messageCode: 1,
+                        message: 'change image success!'
+                    })
                 }
             } catch (error) {
                 console.log(error)
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'change image fail!'

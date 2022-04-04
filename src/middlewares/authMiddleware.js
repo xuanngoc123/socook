@@ -40,9 +40,9 @@ const authMiddleware = {
                     next();
                 };
                 req.result = {
-                    user: data,
                     messageCode: 1,
-                    message: "token valid!"
+                    message: "token valid!",
+                    user: data,
                 };
                 next();
             })

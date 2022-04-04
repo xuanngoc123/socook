@@ -8,6 +8,7 @@ const { getUrlImage } = require("../config/multer");
 const authService = {
     resolveRegisterUser: async (data) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 const email = data.body.email;
                 let findUser = await db.Login_info.findOne({
@@ -18,11 +19,9 @@ const authService = {
                 if (!findUser) {
                     let salt = await bcrypt.genSalt(10);
                     let password = await bcrypt.hash(data.body.password, salt);
-                    let count = await db.User.max('user_id') + 1;
                     let createUser = await db.User.create({
-                        // user_id: count,
                         create_time: Date.now(),
-                    })
+                    }, { transaction })
                     if (!createUser) {
                         resolve({
                             messageCode: 3,
@@ -35,13 +34,14 @@ const authService = {
                             email: data.body.email,
                             encrypted_password: password,
                             role: 'user',
-                        })
+                        }, { transaction })
                         if (!createLoginInfo) {
                             resolve({
                                 messageCode: 3,
                                 message: 'user creation error!'
                             })
                         }
+                        await transaction.commit();
                         resolve({
                             messageCode: 1,
                             message: 'successful registration!'
@@ -56,7 +56,9 @@ const authService = {
                     });
                 }
             } catch (error) {
-                console.log('register: ' + error);
+                console.log(error);
+
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'registration failed!'
@@ -64,21 +66,35 @@ const authService = {
             }
         })
     },
-    generateAccessToken: (user) => {
-        return jwt.sign({
-            user_id: user.user_id,
-            email: user.email,
-            role: user.role,
-        },
-            process.env.ACCESS_TOKEN_KEY,
-            { expiresIn: '84600s' }
-        )
+    generateAccessToken: (loginUser, infoUser) => {
+        if (infoUser.avatar_image) {
+            return jwt.sign({
+                user_id: loginUser.user_id,
+                email: loginUser.email,
+                role: loginUser.role,
+                avatar_image: infoUser.avatar_image,
+            },
+                process.env.ACCESS_TOKEN_KEY,
+                { expiresIn: '84600s' }
+            )
+        } else {
+            return jwt.sign({
+                user_id: loginUser.user_id,
+                email: loginUser.email,
+                role: loginUser.role,
+                avatar_image: '',
+            },
+                process.env.ACCESS_TOKEN_KEY,
+                { expiresIn: '84600s' }
+            )
+        }
+
     },
-    generateRefreshToken: (user) => {
+    generateRefreshToken: (loginUser, infoUser) => {
         return jwt.sign({
-            user_id: user.user_id,
-            email: user.email,
-            role: user.role,
+            user_id: loginUser.user_id,
+            email: loginUser.email,
+            role: loginUser.role,
         },
             process.env.REFRESH_TOKEN_KEY,
             { expiresIn: '365d' }
@@ -107,8 +123,8 @@ const authService = {
                         })
                         if (infoUser.avatar_image) infoUser.avatar_image = getUrlImage(infoUser.avatar_image);
                         if (infoUser.cover_image) infoUser.cover_image = getUrlImage(infoUser.cover_image);
-                        const accessToken = authService.generateAccessToken(findUser);
-                        const refreshToken = authService.generateRefreshToken(findUser);
+                        const accessToken = authService.generateAccessToken(findUser, infoUser);
+                        const refreshToken = authService.generateRefreshToken(findUser, infoUser);
                         resolve({
                             messageCode: 1,
                             message: "login success!",
@@ -136,6 +152,7 @@ const authService = {
     },
     resolveResetPassword: async (data) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let email = data.body.email;
                 var user = await db.Login_info.findOne({
@@ -161,14 +178,8 @@ const authService = {
                     });
 
                     user.encrypted_password = newPassword;
-                    let checkUpdatePass = await user.save();
+                    let checkUpdatePass = await user.save({ transaction });
 
-                    if (!checkUpdatePass) {
-                        resolve({
-                            messageCode: 0,
-                            message: "reset password fail!"
-                        })
-                    }
                     let info = await transporter.sendMail({
                         from: '"Cook Social" <admin>', // sender address
                         to: `${user.email}`, // list of receivers
@@ -176,6 +187,7 @@ const authService = {
                         text: "Đây là mật khẩu mới của bạn: ", // plain text body
                         html: `Đây là mật khẩu mới của bạn: ${randomstring}` // html body
                     });
+                    await transaction.commit();
                     if (info) {
                         resolve({
                             messageCode: 1,
@@ -190,7 +202,8 @@ const authService = {
 
                 }
             } catch (error) {
-                console.log("err reset pass: " + error)
+                console.log(error)
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: "reset password fail!"
@@ -246,50 +259,6 @@ const authService = {
                     messageCode: 0,
                     message: "change password fail!"
                 })
-            }
-        })
-    },
-    // resolveCheckToken: async (data) => {
-    //     return new Promise(async (resolve, reject) => {
-    //         try {
-    //             let token = data.token;
-    //             if (token) {
-    //                 const accessToken = token.split(" ")[1];
-    //                 jwt.verify(accessToken, process.env.ACCESS_TOKEN_KEY, (err, data) => {
-    //                     if (err) {
-    //                         res.status(403).json("token ko hop le");
-    //                     }
-    //                     req.user = data;
-    //                     next();
-    //                 })
-    //             } else {
-    //                 res.status(401).json("ban chua duoc xac thuc");
-    //             }
-    //         } catch (error) {
-    //             reject(error)
-    //         }
-    //     })
-    // },
-
-    resolveDeleteUser: (userid) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                let data = await db.user.findOne({
-                    where: { id: userid },
-                    raw: true,
-                })
-                if (data) {
-                    await db.user.destroy({
-                        where: { id: userid },
-                    });
-                    resolve("xoa thanh cong");
-                } else {
-                    resolve("id ko hop le");
-                }
-
-            } catch (error) {
-                console.log(error)
-                reject(error)
             }
         })
     },

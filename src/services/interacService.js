@@ -1,14 +1,16 @@
-
-
 const db = require("../models/index");
 
 const interacService = {
     resolveCreateComment: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
-                let recipe_id = req.body.id;
+                let recipe_id = req.body.recipe_id;
                 let user_id = req.user.user_id;
                 let count = await db.Comment.max('id');
+                let findRecipe = await db.Recipe.findOne({
+                    where: { id: recipe_id }
+                })
                 let createComment = await db.Comment.create({
                     id: count + 1,
                     user_id: user_id,
@@ -17,7 +19,7 @@ const interacService = {
                     create_time: Date.now(),
                     last_update: Date.now(),
                     update_by: user_id
-                })
+                }, { transaction })
                 let listImgae = req.files.filter(x => x.fieldname == 'imagecomment');
                 let numberOfImageEachStep = listImgae.length;
                 if (numberOfImageEachStep > 0) {
@@ -28,18 +30,71 @@ const interacService = {
                         }
                     }
                     createComment.image_url_list = list_key;
-                    await createComment.save();
+                    await createComment.save({ transaction });
                 }
-
+                if (findRecipe.owner_id != req.user.user_id) {
+                    await db.Notification.create({
+                        type: 'comment',
+                        receive_user_id: findRecipe.owner_id,
+                        create_user_id: req.user.user_id,
+                        create_time: Date.now(),
+                        is_viewed: 0
+                    }, { transaction })
+                }
+                await transaction.commit();
                 resolve({
                     messageCode: 1,
                     message: 'create comment success!'
                 })
             } catch (error) {
                 console.log(error)
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'create comment fail!'
+                })
+            }
+        })
+    },
+    resolveCreateChildComment: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction()
+            try {
+                let createChildComment = await db.Child_comment.create({
+                    parent_id: req.body.parent_id,
+                    user_id: req.user.user_id,
+                    content: req.body.content,
+                    create_time: Date.now(),
+                    last_update: Date.now(),
+                    update_by: req.user.user_id,
+                }, { transaction })
+                let findComment = await db.Comment.findOne({
+                    where: { id: req.body.parent_id },
+                    raw: true
+                })
+                if (req.user.user_id != findComment.user_id) {
+                    await db.Notification.create({
+                        type: 'childcomment',
+                        receive_user_id: findComment.user_id,
+                        recipe_id: findComment.recipe_id,
+                        child_comment_id: createChildComment.id,
+                        comment_id: findComment.id,
+                        create_user_id: req.user.user_id,
+                        create_time: Date.now(),
+                        is_viewed: 0
+                    }, { transaction })
+                }
+                await transaction.commit();
+                resolve({
+                    messageCode: 1,
+                    message: 'create child comment success!'
+                })
+            } catch (error) {
+                console.log(error)
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'create child comment fail!'
                 })
             }
         })
@@ -136,11 +191,13 @@ const interacService = {
     },
     resolveLikeRecipe: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let findRecipe = await db.Recipe.findOne({
                     where: {
                         id: req.body.recipe_id
-                    }
+                    },
+                    raw: true
                 })
                 if (!findRecipe) {
                     resolve({
@@ -155,10 +212,20 @@ const interacService = {
                         }
                     })
                     if (!find) {
-                        let createLike = await db.Like.create({
+                        await db.Like.create({
                             user_id: req.user.user_id,
                             recipe_id: req.body.recipe_id
-                        })
+                        }, { transaction })
+                        if (findRecipe.owner_id != req.user.user_id) {
+                            await db.Notification.create({
+                                type: 'like',
+                                receive_user_id: findRecipe.owner_id,
+                                create_user_id: req.user.user_id,
+                                create_time: Date.now(),
+                                is_viewed: 0
+                            }, { transaction })
+                        }
+                        await transaction.commit();
                         resolve({
                             messageCode: 1,
                             message: 'like success!'
@@ -172,6 +239,7 @@ const interacService = {
                 }
             } catch (error) {
                 console.log(error)
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'like fail!'
@@ -274,13 +342,13 @@ const interacService = {
                         message: 'you followed user!'
                     })
                 } else {
-                    let createFollow = await db.Follow.create({
+                    await db.Follow.create({
                         followed_user_id: req.body.followed_user_id,
                         follow_user_id: req.user.user_id,
                         create_time: Date.now(),
                     }, { transaction: transaction })
 
-                    let createNotification = await db.Notification.create({
+                    await db.Notification.create({
                         type: 'follow',
                         receive_user_id: req.body.followed_user_id,
                         create_user_id: req.user.user_id,
@@ -340,6 +408,27 @@ const interacService = {
                 reject({
                     messageCode: 0,
                     message: 'unfollow fail!'
+                })
+            }
+        })
+    },
+    resolveGetNotification: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let getMyNotification = await db.Notification.findAll({
+                    where: { receive_user_id: req.user.user_id },
+                    raw: true
+                })
+                resolve({
+                    messageCode: 1,
+                    message: 'get notification success!',
+                    data: getMyNotification
+                })
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'get notification fail!'
                 })
             }
         })

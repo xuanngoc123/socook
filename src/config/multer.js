@@ -38,7 +38,18 @@ var upload = multer({
         key: function (req, file, cb) {
             cb(null, Date.now().toString())
         }
-    })
+    }),
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg") {
+            cb(null, true);
+        } else {
+            // cb(null, false)
+            // return cb(new Error('Only .png, .jpg, .jpeg and .svg format allowed'))
+            req.fileValidationError = "Only .png, .jpg, .jpeg and .svg format allowed";
+            return cb(null, false, req.fileValidationError);
+        }
+    },
+    limits: 1 * 1024 * 1024
 })
 
 function getUrlImage(key) {
