@@ -22,35 +22,49 @@ const authService = {
                     let createUser = await db.User.create({
                         create_time: Date.now(),
                     }, { transaction })
-                    if (!createUser) {
-                        resolve({
-                            messageCode: 3,
-                            message: 'user creation error!'
-                        })
-                    } else {
-                        let createLoginInfo = await db.Login_info.create({
-                            user_id: createUser.user_id,
-                            user_name: data.body.user_name,
-                            email: data.body.email,
-                            encrypted_password: password,
-                            role: 'user',
-                        }, { transaction })
-                        if (!createLoginInfo) {
-                            resolve({
-                                messageCode: 3,
-                                message: 'user creation error!'
-                            })
-                        }
-                        await transaction.commit();
-                        resolve({
-                            messageCode: 1,
-                            message: 'successful registration!'
-                        });
-                    }
 
+                    let createLoginInfo = await db.Login_info.create({
+                        user_id: createUser.user_id,
+                        user_name: data.body.user_name,
+                        email: data.body.email,
+                        encrypted_password: password,
+                        status: 0,
+                        role: 'user',
+                    }, { transaction })
+
+                    let accessToken = authService.generateAccessToken(createLoginInfo, createUser);
+
+                    let transporter = nodemailer.createTransport({
+                        service: "Gmail",
+                        auth: {
+                            user: process.env.EMAIL_USER,
+                            pass: process.env.EMAIL_PASSWORD
+                        }
+                    });
+                    let info = await transporter.sendMail({
+                        from: '"Cook Social"<admin>', // sender address
+                        to: `${createLoginInfo.email}`, // list of receivers
+                        subject: "Active Account", // Subject line
+                        // text: "Click link to verify account: ", // plain text body
+                        html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessToken}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessToken}</a>` // html body
+                    }).then(async () => {
+                        await transaction.commit();
+                        return resolve({
+                            messageCode: 1,
+                            message: 'successful registration!',
+                            // accessToken
+                        });
+                    }).catch(async (e) => {
+                        await transaction.rollback();
+                        console.log(e)
+                        return resolve({
+                            messageCode: 3,
+                            message: "sent mail verify fail!",
+                        });
+                    })
                 }
                 else {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'registered email!'
                     });
@@ -66,6 +80,37 @@ const authService = {
             }
         })
     },
+    resolveVerifyUser: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                jwt.verify(req.body.access, process.env.ACCESS_TOKEN_KEY, async (err, data) => {
+                    if (err) {
+                        return resolve({
+                            messageCode: 0,
+                            message: 'verify fail!'
+                        })
+                    } else {
+                        let findLoginInfo = await db.Login_info.findOne({
+                            where: { user_id: data.user_id }
+                        })
+                        findLoginInfo.status = 1;
+                        await findLoginInfo.save();
+                        return resolve({
+                            messageCode: 1,
+                            message: 'verify success!',
+                        })
+                    }
+
+                })
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'verify fail!'
+                })
+            }
+        })
+    },
     generateAccessToken: (loginUser, infoUser) => {
         if (infoUser.avatar_image) {
             return jwt.sign({
@@ -73,6 +118,7 @@ const authService = {
                 email: loginUser.email,
                 role: loginUser.role,
                 avatar_image: infoUser.avatar_image,
+                status: loginUser.status
             },
                 process.env.ACCESS_TOKEN_KEY,
                 { expiresIn: '84600s' }
@@ -83,6 +129,7 @@ const authService = {
                 email: loginUser.email,
                 role: loginUser.role,
                 avatar_image: '',
+                status: loginUser.status
             },
                 process.env.ACCESS_TOKEN_KEY,
                 { expiresIn: '84600s' }
@@ -100,6 +147,15 @@ const authService = {
             { expiresIn: '365d' }
         )
     },
+    generateTokenForActive: (number) => {
+        return jwt.sign({
+            number: number
+        },
+            process.env.REFRESH_TOKEN_KEY,
+            { expiresIn: '180s' }
+        )
+    },
+
     resolveLoginUser: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -110,9 +166,9 @@ const authService = {
                     raw: true,
                 });
                 if (!findUser) {
-                    resolve({
+                    return resolve({
                         messageCode: 3,
-                        message: "email invalid!"
+                        message: "email not found!"
                     })
                 } else {
                     let checkPassword = await bcrypt.compare(password, findUser.encrypted_password);
@@ -125,7 +181,7 @@ const authService = {
                         if (infoUser.cover_image) infoUser.cover_image = getUrlImage(infoUser.cover_image);
                         const accessToken = authService.generateAccessToken(findUser, infoUser);
                         const refreshToken = authService.generateRefreshToken(findUser, infoUser);
-                        resolve({
+                        return resolve({
                             messageCode: 1,
                             message: "login success!",
                             accessToken,
@@ -134,7 +190,7 @@ const authService = {
                         });
                     }
                     else {
-                        resolve({
+                        return resolve({
                             messageCode: 2,
                             message: "password invalid!"
                         })
@@ -159,7 +215,7 @@ const authService = {
                     where: { email: email },
                 });
                 if (!user) {
-                    resolve({
+                    return resolve({
                         messageCode: 3,
                         message: "email invalid!"
                     })
@@ -172,8 +228,8 @@ const authService = {
                     let transporter = nodemailer.createTransport({
                         service: "Gmail",
                         auth: {
-                            user: "xuanngochq2k@gmail.com",
-                            pass: "xuanngocuet"
+                            user: process.env.EMAIL_USER,
+                            pass: process.env.EMAIL_PASSWORD
                         }
                     });
 
@@ -181,24 +237,31 @@ const authService = {
                     let checkUpdatePass = await user.save({ transaction });
 
                     let info = await transporter.sendMail({
-                        from: '"Cook Social" <admin>', // sender address
+                        from: '"Cook Social"', // sender address
                         to: `${user.email}`, // list of receivers
                         subject: "Reset Password", // Subject line
                         text: "Đây là mật khẩu mới của bạn: ", // plain text body
                         html: `Đây là mật khẩu mới của bạn: ${randomstring}` // html body
-                    });
-                    await transaction.commit();
-                    if (info) {
-                        resolve({
+                    }).then(async () => {
+                        await transaction.commit();
+                        return resolve({
                             messageCode: 1,
                             message: "sent password success!",
                         });
-                    } else {
-                        resolve({
+                    }).catch(async (e) => {
+                        await transaction.rollback();
+                        console.log(e)
+                        return resolve({
                             messageCode: 2,
                             message: "sent password fail!",
                         });
-                    }
+                    })
+                    // await transaction.commit();
+                    // if (info) {
+
+                    // } else {
+
+                    // }
 
                 }
             } catch (error) {
@@ -219,7 +282,7 @@ const authService = {
                     where: { email: email },
                 });
                 if (!user) {
-                    resolve({
+                    return resolve({
                         messageCode: 3,
                         message: "email invalid!"
                     })
@@ -235,18 +298,18 @@ const authService = {
                         user.encrypted_password = newEncyptPassword;
                         let checkChangePass = await user.save();
                         if (!checkChangePass) {
-                            resolve({
+                            return resolve({
                                 messageCode: 0,
                                 message: "change password fail!"
                             })
                         } else {
-                            resolve({
+                            return resolve({
                                 messageCode: 1,
                                 message: "change password success!"
                             })
                         }
                     } else {
-                        resolve({
+                        return resolve({
                             messageCode: 2,
                             message: "password invalid!"
                         })

@@ -2,26 +2,27 @@ const express = require('express')
 const authMiddleware = require('../middlewares/authMiddleware')
 let router = express.Router();
 const authController = require('../controllers/authController');
-const { validate } = require('../middlewares/authValidate');
+const { validateAuth } = require('../middlewares/authValidate');
 
 //register
-router.post('/register', validate.validateRegisterUser(), authController.registerUser);
+router.post('/register', validateAuth.validateRegisterUser(), authController.registerUser);
 
+router.post('/verify', validateAuth.validateVerifyUser(), authController.veryfiUser);
 
 //login
-router.post('/login', validate.validateLogin(), authController.loginUser);
+router.post('/login', validateAuth.validateLogin(), authController.loginUser);
 
 
 //change password
-router.put('/changepassword', authMiddleware.veryfiToken, validate.validateChangePassword(), authController.changePassword)
+router.put('/changepassword', authMiddleware.veryfiToken, validateAuth.validateChangePassword(), authController.changePassword)
 
 
 //fogot password
-router.put('/resetpassword', validate.validateResetPassword(), authController.resetPassword)
+router.put('/resetpassword', validateAuth.validateResetPassword(), authController.resetPassword)
 
 // check token
 router.get('/checktoken', authMiddleware.checkToken, (req, res) => {
-    res.status(200).json(req.result);
+    return res.status(200).json(req.result);
 });
 
 

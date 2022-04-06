@@ -42,7 +42,7 @@ const interacService = {
                     }, { transaction })
                 }
                 await transaction.commit();
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'create comment success!'
                 })
@@ -85,7 +85,7 @@ const interacService = {
                     }, { transaction })
                 }
                 await transaction.commit();
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'create child comment success!'
                 })
@@ -106,14 +106,14 @@ const interacService = {
                     where: { id: req.body.id }
                 })
                 if (findComment.user_id != req.user.user_id) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'you are not allowed!'
                     })
                 }
                 findComment.content = req.body.content;
                 await findComment.save();
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'update your comment success!'
                 })
@@ -122,6 +122,43 @@ const interacService = {
                 reject({
                     messageCode: 0,
                     message: 'update your comment fail!'
+                })
+            }
+        })
+    },
+    resolveUpdateChildComment: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let findChildComment = await db.Child_comment.findOne({
+                    where: { id: req.body.child_comment_id }
+                })
+                if (!findChildComment) {
+                    return resolve({
+                        messageCode: 3,
+                        message: 'child comment not found!'
+                    })
+                }
+                if (findChildComment.user_id != req.user.user_id) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'you are not allowed!'
+                    })
+                }
+                findChildComment.content = req.body.content;
+                findChildComment.last_update = Date.now();
+                await findChildComment.save({ transaction });
+                await transaction.commit();
+                return resolve({
+                    messageCode: 1,
+                    message: 'update your child comment success!'
+                })
+            } catch (error) {
+                console.log(error)
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'update your child comment fail!'
                 })
             }
         })
@@ -135,13 +172,13 @@ const interacService = {
                     where: { id: req.query.id }
                 })
                 if (!findComment) {
-                    resolve({
+                    return resolve({
                         messageCode: 3,
                         message: 'comment not found!'
                     })
                 }
                 if (req.user.user_id != findComment.user_id) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'you are not allowed!'
                     })
@@ -155,7 +192,7 @@ const interacService = {
                     where: { id: req.query.id }
                 }, { transaction: transaction })
                 await transaction.commit();
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'delete your comment success!'
                 })
@@ -168,6 +205,43 @@ const interacService = {
             }
         })
     },
+    resolveDeleteChildComment: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let findChildComment = await db.Child_comment.findOne({
+                    where: { id: req.query.id }
+                })
+                if (!findChildComment) {
+                    return resolve({
+                        messageCode: 3,
+                        message: 'child comment not found!'
+                    })
+                }
+                if (req.user.user_id != findChildComment.user_id) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'you are not allowed!'
+                    })
+                }
+                await db.Child_comment.destroy({
+                    where: { id: req.query.id }
+                }, { transaction })
+                await transaction.commit();
+                return resolve({
+                    messageCode: 1,
+                    message: 'delete your child comment success!'
+                })
+            } catch (error) {
+                console.log(error)
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'delete your child comment fail!'
+                })
+            }
+        })
+    },
     resolveGetHistoryComment: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -175,7 +249,7 @@ const interacService = {
                     where: { user_id: req.user.user_id },
                     raw: true
                 })
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'get history comment success!',
                     data: findMyComment,
@@ -200,7 +274,7 @@ const interacService = {
                     raw: true
                 })
                 if (!findRecipe) {
-                    resolve({
+                    return resolve({
                         messageCode: 3,
                         message: 'recipe not found!'
                     })
@@ -226,12 +300,12 @@ const interacService = {
                             }, { transaction })
                         }
                         await transaction.commit();
-                        resolve({
+                        return resolve({
                             messageCode: 1,
                             message: 'like success!'
                         })
                     } else {
-                        resolve({
+                        return resolve({
                             messageCode: 2,
                             message: 'you were liked!'
                         })
@@ -256,7 +330,7 @@ const interacService = {
                     }
                 })
                 if (!findRecipe) {
-                    resolve({
+                    return resolve({
                         messageCode: 3,
                         message: 'recipe not found!'
                     })
@@ -275,12 +349,12 @@ const interacService = {
                             }
 
                         })
-                        resolve({
+                        return resolve({
                             messageCode: 1,
                             message: 'dislike success!'
                         })
                     } else {
-                        resolve({
+                        return resolve({
                             messageCode: 2,
                             message: 'you have not liked!'
                         })
@@ -312,7 +386,7 @@ const interacService = {
                         id: arr
                     }
                 })
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'get recipe liked success!',
                     data: findRecipeLiked
@@ -337,7 +411,7 @@ const interacService = {
                     }
                 })
                 if (findFollow) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'you followed user!'
                     })
@@ -357,7 +431,7 @@ const interacService = {
                     }, { transaction: transaction })
 
                     await transaction.commit();
-                    resolve({
+                    return resolve({
                         messageCode: 1,
                         message: 'follow success!'
                     })
@@ -383,7 +457,7 @@ const interacService = {
                     }
                 })
                 if (!findFollow) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'you have not followed user!'
                     })
@@ -397,7 +471,7 @@ const interacService = {
                     }, { transaction: transaction })
 
                     await transaction.commit();
-                    resolve({
+                    return resolve({
                         messageCode: 1,
                         message: 'unfollow success!'
                     })
@@ -419,7 +493,7 @@ const interacService = {
                     where: { receive_user_id: req.user.user_id },
                     raw: true
                 })
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'get notification success!',
                     data: getMyNotification

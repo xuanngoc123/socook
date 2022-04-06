@@ -14,7 +14,7 @@ const userService = {
 
                 if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
                 if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'get my info success!',
                     user: user,
@@ -37,27 +37,27 @@ const userService = {
                     where: { user_id: user_id },
                 })
 
-                user.full_name = data.body.full_name;
-                user.introduction = data.body.introduction;
-                user.date_of_birth = data.body.date_of_birth;
-                user.gender = data.body.gender;
-                user.city = data.body.city;
-                user.district = data.body.district;
+                if (data.body.full_name) user.full_name = data.body.full_name;
+                if (data.body.introduction) user.introduction = data.body.introduction;
+                if (data.body.date_of_birth) user.date_of_birth = data.body.date_of_birth;
+                if (data.body.gender) user.gender = data.body.gender;
+                if (data.body.city) user.city = data.body.city;
+                if (data.body.district) user.district = data.body.district;
                 user.last_update = Date.now();
 
                 await user.save({ transaction });
                 await transaction.commit();
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'change info success!'
                 })
             } catch (error) {
                 console.log(error);
                 await transaction.rollback();
-                reject(resolve({
+                reject({
                     messageCode: 0,
                     message: 'change info fali!'
-                }))
+                })
             }
         })
     },
@@ -69,7 +69,7 @@ const userService = {
                     raw: true,
                 })
                 if (!user) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'user not found!'
                     })
@@ -79,7 +79,7 @@ const userService = {
 
                 if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
                 if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'get user info success!',
                     user: user,
@@ -104,7 +104,7 @@ const userService = {
 
                 let result = req.file;
                 if (!result) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'upload image fail!'
                     })
@@ -113,7 +113,7 @@ const userService = {
                     user.avatar_image = result.key;
                     await user.save({ transaction });
                     await transaction.commit();
-                    resolve({
+                    return resolve({
                         messageCode: 1,
                         message: 'change image success!'
                     })
@@ -141,7 +141,7 @@ const userService = {
 
                 let result = req.file;
                 if (!result) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'upload image fail!'
                     })
@@ -150,7 +150,7 @@ const userService = {
                     user.cover_image = result.key;
                     await user.save({ transaction });
                     await transaction.commit();
-                    resolve({
+                    return resolve({
                         messageCode: 1,
                         message: 'change image success!'
                     })

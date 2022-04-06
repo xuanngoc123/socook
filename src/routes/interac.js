@@ -10,9 +10,11 @@ router.post('/create-child-comment', authMiddleware.veryfiToken, interacControll
 
 router.put('/update-comment', authMiddleware.veryfiToken, upload.any(), interacController.updateComment)
 
-// router.put('/update-child-comment', authMiddleware.veryfiToken, interacController.updateChildComment)
+router.put('/update-child-comment', authMiddleware.veryfiToken, interacController.updateChildComment)
 
 router.delete('/delete-comment', authMiddleware.veryfiToken, interacController.deleteComment)
+
+router.delete('/delete-child-comment', authMiddleware.veryfiToken, interacController.deleteChildComment)
 
 router.get('/history-comment', authMiddleware.veryfiToken, interacController.getHistoryComment)
 

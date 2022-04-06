@@ -11,7 +11,7 @@ const recipeService = {
                     raw: true
                 })
                 if (!recipe) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'recipe not found!'
                     })
@@ -80,7 +80,7 @@ const recipeService = {
                         comment,
                     }
 
-                    resolve({
+                    return resolve({
                         messageCode: 1,
                         message: 'get recipe success!',
                         data
@@ -97,6 +97,7 @@ const recipeService = {
     },
     resolveCreateRecipe: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let number_of_step = req.body.number_of_step;
 
@@ -112,12 +113,12 @@ const recipeService = {
                     create_time: Date.now(),
                     last_update: Date.now(),
                     update_by: req.user.user_id
-                })
+                }, { transaction })
 
                 let main_image_url = req.files.filter(x => x.fieldname == 'main_image_url');
                 if (main_image_url.length > 0) {
                     createRecipe.main_image_url = main_image_url[0].key;
-                    await createRecipe.save();
+                    await createRecipe.save({ transaction });
                 }
 
 
@@ -127,7 +128,7 @@ const recipeService = {
                         recipe_id: createRecipe.id,
                         number: i,
                         content: req.body.step[i - 1]
-                    })
+                    }, { transaction })
                     let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
                     let numberOfImageEachStep = listImgae.length;
                     let list_key = '';
@@ -137,7 +138,7 @@ const recipeService = {
                         }
                     }
                     createStep.image_url_list = list_key;
-                    await createStep.save();
+                    await createStep.save({ transaction });
                 }
                 //CREATE TABLE CATEGORY HAS RECIPE
                 let category = req.body.category;
@@ -149,7 +150,7 @@ const recipeService = {
                     await db.Category_has_recipe.create({
                         recipe_id: createRecipe.id,
                         category_id: category_id.id,
-                    })
+                    }, { transaction })
                 }
                 //CREATE TABLE INGREDIENT and RECIPE_HAS_INGREDIENT
                 let listIngredient = req.body.ingredient;
@@ -169,27 +170,29 @@ const recipeService = {
                     if (!findIngredient) {
                         let createIngredient = await db.Ingredient.create({
                             name: ingredient
-                        })
+                        }, { transaction })
                         let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
                             recipe_id: createRecipe.id,
                             ingredient_id: createIngredient.id,
                             quantity: quantity
-                        })
+                        }, { transaction })
                     } else {
                         let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
                             recipe_id: createRecipe.id,
                             ingredient_id: findIngredient.id,
                             quantity: quantity
-                        })
+                        }, { transaction })
                     }
                 }
-                resolve({
+                await transaction.commit();
+                return resolve({
                     messageCode: 1,
                     message: 'create recipe success!'
                 })
 
             } catch (error) {
                 console.log("create recipe: " + error)
+                await transaction.rollback()
                 reject({
                     messageCode: 0,
                     message: 'create recipe fail!'
@@ -207,7 +210,7 @@ const recipeService = {
                         is_allowed: 0
                     }
                 })
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'get wait recipe success!',
                     waitRecipe,
@@ -229,10 +232,14 @@ const recipeService = {
 
                 // UPDATE TABLE RECIPE
                 let findRecipe = await db.Recipe.findOne({
-                    where: { id: req.body.id }
+                    where: { id: req.body.recipe_id }
                 })
-                if (findRecipe.owner_id != req.user.user_id) {
-                    resolve({
+                let findLoginInfo = await db.Login_info.findOne({
+                    where: { user_id: req.user.user_id },
+                    raw: true
+                })
+                if (findRecipe.owner_id != req.user.user_id && findLoginInfo.role != 'admin') {
+                    return resolve({
                         messageCode: 2,
                         message: 'you are not allowed!'
                     })
@@ -399,7 +406,7 @@ const recipeService = {
                         })
                     }
                 }
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'update recipe success!'
                 })
@@ -422,7 +429,7 @@ const recipeService = {
                     where: { id: id }
                 })
                 if (findRecipe.owner_id != req.user.user_id) {
-                    resolve({
+                    return resolve({
                         messageCode: 2,
                         message: 'you are not allowed!'
                     })
@@ -447,7 +454,7 @@ const recipeService = {
                 }, { transaction: transaction })
 
                 await transaction.commit();
-                resolve({
+                return resolve({
                     messageCode: 1,
                     message: 'delete recipe success!'
                 })

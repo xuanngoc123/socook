@@ -5,7 +5,7 @@ const { Sequelize } = require('sequelize');
 const sequelize = new Sequelize('recipedb', 'root', 'mot2ba4nam6', {
     host: 'aa5jr3ty3y77lr.cyfgjqbdi1mp.ap-southeast-1.rds.amazonaws.com',
     dialect: 'mysql',
-    
+    // timezone: 'utc'
 });
 
 let connectDB = async () => {

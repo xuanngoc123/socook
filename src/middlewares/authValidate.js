@@ -33,14 +33,23 @@ let validateResetPassword = () => {
   return [
     check('email', 'Invalid does not Empty').not().isEmpty(),
     check('email', 'Invalid email').isEmail(),
+  ]
+}
+
+let validateVerifyUser = () => {
+  return [
+    check('access', 'Invalid does not Empty').not().isEmpty(),
   ];
 }
 
-let validate = {
+
+
+let validateAuth = {
   validateRegisterUser: validateRegisterUser,
   validateLogin: validateLogin,
   validateChangePassword: validateChangePassword,
-  validateResetPassword: validateResetPassword
+  validateResetPassword: validateResetPassword,
+  validateVerifyUser: validateVerifyUser
 };
 
-module.exports = { validate };
+module.exports = { validateAuth };

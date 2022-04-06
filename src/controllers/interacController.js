@@ -34,9 +34,27 @@ const interacController = {
             return res.status(500).json(error)
         }
     },
+    updateChildComment: async (req, res) => {
+        try {
+            let data = await interacService.resolveUpdateChildComment(req);
+            return res.status(200).json(data)
+
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
     deleteComment: async (req, res) => {
         try {
             let data = await interacService.resolveDeleteComment(req);
+            return res.status(200).json(data)
+
+        } catch (error) {
+            res.status(500).json(error)
+        }
+    },
+    deleteChildComment: async (req, res) => {
+        try {
+            let data = await interacService.resolveDeleteChildComment(req);
             return res.status(200).json(data)
 
         } catch (error) {
