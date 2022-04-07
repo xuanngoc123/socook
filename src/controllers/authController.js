@@ -62,6 +62,14 @@ const authController = {
             return res.status(500).json(error)
         }
     },
+    reSentLink: async (req, res) => {
+        try {
+            let data = await authService.resolveReSentLink(req);
+            return res.status(200).json(data)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 
 module.exports = authController;

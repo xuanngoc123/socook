@@ -31,9 +31,9 @@ const authService = {
                         status: 0,
                         role: 'user',
                     }, { transaction })
-
-                    let accessToken = authService.generateAccessToken(createLoginInfo, createUser);
-
+                    let accessToken = authService.generateAccessToken(createLoginInfo, createUser)
+                    let accessTokenForActive = authService.generateTokenForActive(createLoginInfo);
+                    createUser.status = createLoginInfo.status
                     let transporter = nodemailer.createTransport({
                         service: "Gmail",
                         auth: {
@@ -46,13 +46,15 @@ const authService = {
                         to: `${createLoginInfo.email}`, // list of receivers
                         subject: "Active Account", // Subject line
                         // text: "Click link to verify account: ", // plain text body
-                        html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessToken}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessToken}</a>` // html body
+                        html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
                     }).then(async () => {
                         await transaction.commit();
+
                         return resolve({
                             messageCode: 1,
                             message: 'successful registration!',
-                            // accessToken
+                            accessToken,
+                            user: createUser
                         });
                     }).catch(async (e) => {
                         await transaction.rollback();
@@ -83,7 +85,7 @@ const authService = {
     resolveVerifyUser: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
-                jwt.verify(req.body.access, process.env.ACCESS_TOKEN_KEY, async (err, data) => {
+                jwt.verify(req.body.access, process.env.VERIFY_TOKEN_KEY, async (err, data) => {
                     if (err) {
                         return resolve({
                             messageCode: 0,
@@ -93,6 +95,12 @@ const authService = {
                         let findLoginInfo = await db.Login_info.findOne({
                             where: { user_id: data.user_id }
                         })
+                        if (findLoginInfo == 1) {
+                            return resolve({
+                                messageCode: 2,
+                                message: 'account activated!',
+                            })
+                        }
                         findLoginInfo.status = 1;
                         await findLoginInfo.save();
                         return resolve({
@@ -147,15 +155,15 @@ const authService = {
             { expiresIn: '365d' }
         )
     },
-    generateTokenForActive: (number) => {
+    generateTokenForActive: (loginUser) => {
         return jwt.sign({
-            number: number
+            user_id: loginUser.user_id,
+            email: loginUser.email,
         },
-            process.env.REFRESH_TOKEN_KEY,
+            process.env.VERIFY_TOKEN_KEY,
             { expiresIn: '180s' }
         )
     },
-
     resolveLoginUser: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -326,12 +334,51 @@ const authService = {
             }
         })
     },
-    example: async () => {
+    example: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
 
             } catch (error) {
                 reject(error)
+            }
+        })
+    },
+    resolveReSentLink: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let accessTokenForActive = authService.generateTokenForActive(req.user)
+                let transporter = nodemailer.createTransport({
+                    service: "Gmail",
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASSWORD
+                    }
+                });
+                let info = await transporter.sendMail({
+                    from: '"Cook Social"<admin>', // sender address
+                    to: `${req.user.email}`, // list of receivers
+                    subject: "Active Account", // Subject line
+                    // text: "Click link to verify account: ", // plain text body
+                    html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
+                }).then(async () => {
+                    return resolve({
+                        messageCode: 1,
+                        message: 'sent email success!',
+                        // accessToken
+                    });
+                }).catch(async (e) => {
+                    console.log(e)
+                    return resolve({
+                        messageCode: 0,
+                        message: "sent mail fail!",
+                    });
+                })
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: "sent mail fail!",
+                })
             }
         })
     },
