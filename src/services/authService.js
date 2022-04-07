@@ -31,9 +31,11 @@ const authService = {
                         status: 0,
                         role: 'user',
                     }, { transaction })
+
                     let accessToken = authService.generateAccessToken(createLoginInfo, createUser)
+                    let refreshToken = authService.generateRefreshToken(createLoginInfo, createUser)
                     let accessTokenForActive = authService.generateTokenForActive(createLoginInfo);
-                    createUser.status = createLoginInfo.status
+
                     let transporter = nodemailer.createTransport({
                         service: "Gmail",
                         auth: {
@@ -49,12 +51,17 @@ const authService = {
                         html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
                     }).then(async () => {
                         await transaction.commit();
-
+                        let findUser = await db.User.findOne({
+                            where: { user_id: createUser.user_id },
+                            raw: true
+                        })
+                        findUser.status = 0;
                         return resolve({
                             messageCode: 1,
                             message: 'successful registration!',
                             accessToken,
-                            user: createUser
+                            refreshToken,
+                            user: findUser
                         });
                     }).catch(async (e) => {
                         await transaction.rollback();
