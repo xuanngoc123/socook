@@ -9,6 +9,8 @@ router.post('/register', validateAuth.validateRegisterUser(), authController.reg
 
 router.post('/verify', validateAuth.validateVerifyUser(), authController.veryfiUser);
 
+// router.post('/resentlink', validateAuth.validateVerifyUser(), authController.veryfiUser);
+
 //login
 router.post('/login', validateAuth.validateLogin(), authController.loginUser);
 

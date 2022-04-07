@@ -181,6 +181,7 @@ const authService = {
                         if (infoUser.cover_image) infoUser.cover_image = getUrlImage(infoUser.cover_image);
                         const accessToken = authService.generateAccessToken(findUser, infoUser);
                         const refreshToken = authService.generateRefreshToken(findUser, infoUser);
+                        infoUser.status = findUser.status;
                         return resolve({
                             messageCode: 1,
                             message: "login success!",
