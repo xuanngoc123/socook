@@ -165,6 +165,42 @@ const userService = {
             }
         })
     },
+    resolveGetTopUser: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let limit = req.query.limit;
+                const [countFollow] = await db.sequelize.query(
+                    `SELECT follow.followed_user_id, COUNT(follow_user_id) AS number_of_followers FROM follow GROUP by followed_user_id ORDER BY COUNT(follow_user_id) DESC LIMIT ${limit}`
+                )
+                var arr = []
+                for (let i = 0; i < countFollow.length; i++) {
+                    arr.push(countFollow[i].followed_user_id)
+                }
+                let topUser = await db.User.findAll({
+                    where: {
+                        user_id: arr
+                    },
+                    raw: true
+                })
+                for (let i = 0; i < topUser.length; i++) {
+                    topUser[i].number_of_followers = countFollow[i].number_of_followers;
+                    topUser[i].avatar_image = getUrlImage(topUser[i].avatar_image);
+                    topUser[i].cover_image = getUrlImage(topUser[i].cover_image);
+                }
+                return resolve({
+                    messageCode: 1,
+                    message: 'get top user success!',
+                    data: topUser
+                })
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'get top user fail!'
+                })
+            }
+        })
+    },
 }
 
 module.exports = userService

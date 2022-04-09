@@ -11,6 +11,22 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    getMyListRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetMyListRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    getUserListRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetUserListRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
     createRecipe: async (req, res) => {
         try {
             const errors = validationResult(req);
@@ -52,6 +68,14 @@ const recipeController = {
     deleteRecipe: async (req, res) => {
         try {
             let data = await recipeService.resolveDeleteRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    allowedRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveAllowedRecipe(req);
             return res.status(200).json(data);
         } catch (error) {
             return res.status(500).json(error)

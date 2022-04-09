@@ -53,6 +53,7 @@ var upload = multer({
 })
 
 function getUrlImage(key) {
+    if (key == null || key == "") return null
     const downloadParams = {
         Key: key,
         Bucket: bucketName,

@@ -18,9 +18,9 @@ const authMiddleware = {
             })
         }
     },
-    veryfiTokenForDelete: (req, res, next) => {
+    veryfiTokenForAdmin: (req, res, next) => {
         authMiddleware.veryfiToken(req, res, () => {
-            if ((req.user.user_id == req.query.id) || (req.user.role == 'admin')) {
+            if (req.user.role == 'admin') {
                 next();
             } else {
                 res.status(403).json("you are not allowed");

@@ -7,6 +7,10 @@ let router = express.Router();
 
 router.get('/get-recipe', authMiddleware.checkToken, recipeController.getRecipe)
 
+router.get('/my-list-recipe', authMiddleware.veryfiToken, recipeController.getMyListRecipe)
+
+router.get('/user-list-recipe', authMiddleware.checkToken, recipeController.getUserListRecipe)
+
 router.post('/create-recipe', authMiddleware.veryfiToken, upload.any(), validateRecipe.validateCreateRecipe(), recipeController.createRecipe)
 
 router.get('/wait-recipe', authMiddleware.veryfiToken, recipeController.getWaitRecipe)
@@ -14,5 +18,7 @@ router.get('/wait-recipe', authMiddleware.veryfiToken, recipeController.getWaitR
 router.put('/update-recipe', authMiddleware.veryfiToken, upload.any(), validateRecipe.validateUpdateRecipe(), recipeController.updateRecipe)
 
 router.delete('/delete-recipe', authMiddleware.veryfiToken, recipeController.deleteRecipe)
+
+router.put('/allowed-recipe', authMiddleware.veryfiTokenForAdmin, recipeController.allowedRecipe)
 
 module.exports = router;

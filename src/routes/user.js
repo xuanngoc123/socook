@@ -11,7 +11,7 @@ router.get('/my-info', authMiddleware.veryfiToken, userController.getMyInfo);
 router.put('/change-my-info', authMiddleware.veryfiToken, userController.changeMyInfo);
 
 //get user info by query user_id
-router.get('/user-info', authMiddleware.checkToken, userController.getUserInfo);
+router.get('/user-info', userController.getUserInfo);
 
 //change avater image 
 router.post('/avatar', authMiddleware.veryfiToken, upload.single('image'), userController.changeAvatar)
@@ -19,5 +19,7 @@ router.post('/avatar', authMiddleware.veryfiToken, upload.single('image'), userC
 //change cover image
 router.post('/cover-image', authMiddleware.veryfiToken, upload.single('image'), userController.changeCoverImage)
 
-// router.get('/user/:user_id', userController.getUserInfoByParams);
+
+router.get('/top-user', userController.getTopUser);
+
 module.exports = router;

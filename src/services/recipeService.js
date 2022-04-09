@@ -95,6 +95,62 @@ const recipeService = {
             }
         })
     },
+    resolveGetMyListRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let myListRecipe = await db.Recipe.findAll({
+                    where: {
+                        owner_id: req.user.user_id,
+                        is_allowed: 1
+                    }
+                })
+                myListRecipe = recipeService.getUrlImageOfArrRecipe(myListRecipe)
+                return resolve({
+                    messageCode: 1,
+                    message: 'get my list recipe success!',
+                    myListRecipe,
+                })
+
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'get my list recipe fail!'
+                })
+            }
+        })
+    },
+    resolveGetUserListRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let myListRecipe = await db.Recipe.findAll({
+                    where: {
+                        owner_id: req.body.user_id,
+                        is_allowed: 1
+                    }
+                })
+                if (!myListRecipe) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'user not fonnd!',
+                    })
+                }
+                myListRecipe = recipeService.getUrlImageOfArrRecipe(myListRecipe)
+                return resolve({
+                    messageCode: 1,
+                    message: 'get user list recipe success!',
+                    myListRecipe,
+                })
+
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'get user list recipe fail!'
+                })
+            }
+        })
+    },
     resolveCreateRecipe: async (req) => {
         return new Promise(async (resolve, reject) => {
             const transaction = await db.sequelize.transaction();
@@ -210,6 +266,7 @@ const recipeService = {
                         is_allowed: 0
                     }
                 })
+                waitRecipe = recipeService.getUrlImageOfArrRecipe(waitRecipe);
                 return resolve({
                     messageCode: 1,
                     message: 'get wait recipe success!',
@@ -217,7 +274,7 @@ const recipeService = {
                 })
 
             } catch (error) {
-                console.log("wait recipe: " + error)
+                console.log(error)
                 reject({
                     messageCode: 0,
                     message: 'get wait recipe fail!'
@@ -468,6 +525,37 @@ const recipeService = {
             }
         })
     },
+    resolveAllowedRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let recipe = await db.Recipe.findOne({
+                    where: { id: req.body.recipe_id },
+                })
+                recipe.is_allowed = 1
+                await recipe.save({ transaction });
+                await transaction.commit()
+                return resolve({
+                    messageCode: 1,
+                    message: 'allowed recipe success!'
+                })
+            } catch (error) {
+                await transaction.rollback()
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'allowed recipe fail!'
+                })
+            }
+        })
+    },
+    getUrlImageOfArrRecipe: (listRecipe) => {
+        let length = listRecipe.length;
+        for (let i = 0; i < length; i++) {
+            listRecipe[i].main_image_url = getUrlImage(listRecipe[i].main_image_url)
+        }
+        return listRecipe
+    }
 }
 
 module.exports = recipeService;
