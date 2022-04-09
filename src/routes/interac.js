@@ -20,13 +20,13 @@ router.get('/history-comment', authMiddleware.veryfiToken, interacController.get
 
 router.post('/like-recipe', authMiddleware.veryfiToken, interacController.likeRecipe)
 
-router.post('/dislike-recipe', authMiddleware.veryfiToken, interacController.dislikeRecipe)
+router.delete('/dislike-recipe', authMiddleware.veryfiToken, interacController.dislikeRecipe)
 
 router.get('/recipe-liked', authMiddleware.veryfiToken, interacController.getRecipeLiked)
 
 router.post('/follow', authMiddleware.veryfiToken, interacController.followUser)
 
-router.post('/unfollow', authMiddleware.veryfiToken, interacController.unfollowUser)
+router.delete('/unfollow', authMiddleware.veryfiToken, interacController.unfollowUser)
 
 router.get('/notification', authMiddleware.veryfiToken, interacController.getNotification)
 

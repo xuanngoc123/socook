@@ -56,6 +56,7 @@ const authService = {
                             raw: true
                         })
                         findUser.status = 0;
+                        findUser.email = createLoginInfo.email;
                         return resolve({
                             messageCode: 1,
                             message: 'successful registration!',
@@ -80,7 +81,6 @@ const authService = {
                 }
             } catch (error) {
                 console.log(error);
-
                 await transaction.rollback();
                 reject({
                     messageCode: 0,
@@ -197,6 +197,7 @@ const authService = {
                         const accessToken = authService.generateAccessToken(findUser, infoUser);
                         const refreshToken = authService.generateRefreshToken(findUser, infoUser);
                         infoUser.status = findUser.status;
+                        infoUser.email = findUser.email;
                         return resolve({
                             messageCode: 1,
                             message: "login success!",

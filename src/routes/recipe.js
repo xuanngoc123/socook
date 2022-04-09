@@ -5,11 +5,11 @@ const { upload } = require('../config/multer');
 const { validateRecipe } = require('../middlewares/recipeValidate');
 let router = express.Router();
 
-router.get('/get-recipe', authMiddleware.checkToken, recipeController.getRecipe)
+router.get('/get-recipe', recipeController.getRecipe)
 
 router.get('/my-list-recipe', authMiddleware.veryfiToken, recipeController.getMyListRecipe)
 
-router.get('/user-list-recipe', authMiddleware.checkToken, recipeController.getUserListRecipe)
+router.get('/user-list-recipe', recipeController.getUserListRecipe)
 
 router.post('/create-recipe', authMiddleware.veryfiToken, upload.any(), validateRecipe.validateCreateRecipe(), recipeController.createRecipe)
 
