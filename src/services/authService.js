@@ -1,9 +1,9 @@
 const bcrypt = require("bcrypt");
-const { promise, reject } = require("bcrypt/promises");
 const db = require('../models/index')
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 const { getUrlImage } = require("../config/multer");
+const sendMail = require("../config/nodemailer");
 
 const authService = {
     resolveRegisterUser: async (data) => {
@@ -36,42 +36,45 @@ const authService = {
                     let refreshToken = authService.generateRefreshToken(createLoginInfo, createUser)
                     let accessTokenForActive = authService.generateTokenForActive(createLoginInfo);
 
-                    let transporter = nodemailer.createTransport({
-                        service: "Gmail",
-                        auth: {
-                            user: process.env.EMAIL_USER,
-                            pass: process.env.EMAIL_PASSWORD
-                        }
-                    });
-                    let info = await transporter.sendMail({
-                        from: '"Cook Social"<admin>', // sender address
-                        to: `${createLoginInfo.email}`, // list of receivers
-                        subject: "Active Account", // Subject line
-                        // text: "Click link to verify account: ", // plain text body
-                        html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
-                    }).then(async () => {
-                        await transaction.commit();
-                        let findUser = await db.User.findOne({
-                            where: { user_id: createUser.user_id },
-                            raw: true
+                    // let transporter = nodemailer.createTransport({
+                    // service: "Gmail",
+                    // auth: {
+                    //     user: process.env.EMAIL_USER,
+                    //     pass: process.env.EMAIL_PASSWORD
+                    // }
+                    // });
+                    // let info = await transporter.sendMail({
+                    //     from: '"Cook Social"<admin>', // sender address
+                    //     to: `${createLoginInfo.email}`, // list of receivers
+                    //     subject: "Active Account", // Subject line
+                    //     // text: "Click link to verify account: ", // plain text body
+                    //     html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
+                    // })
+                    const content = `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>`
+                    await sendMail(createLoginInfo.email, content)
+                        .then(async () => {
+                            await transaction.commit();
+                            let findUser = await db.User.findOne({
+                                where: { user_id: createUser.user_id },
+                                raw: true
+                            })
+                            findUser.status = 0;
+                            findUser.email = createLoginInfo.email;
+                            return resolve({
+                                messageCode: 1,
+                                message: 'successful registration!',
+                                accessToken,
+                                refreshToken,
+                                user: findUser
+                            });
+                        }).catch(async (e) => {
+                            await transaction.rollback();
+                            console.log(e)
+                            return resolve({
+                                messageCode: 3,
+                                message: "sent mail verify fail!",
+                            });
                         })
-                        findUser.status = 0;
-                        findUser.email = createLoginInfo.email;
-                        return resolve({
-                            messageCode: 1,
-                            message: 'successful registration!',
-                            accessToken,
-                            refreshToken,
-                            user: findUser
-                        });
-                    }).catch(async (e) => {
-                        await transaction.rollback();
-                        console.log(e)
-                        return resolve({
-                            messageCode: 3,
-                            message: "sent mail verify fail!",
-                        });
-                    })
                 }
                 else {
                     return resolve({
@@ -242,37 +245,40 @@ const authService = {
                     let newPassword = await bcrypt.hash(randomstring, salt);
 
                     // let testAccount = await nodemailer.createTestAccount();
-                    let transporter = nodemailer.createTransport({
-                        service: "Gmail",
-                        auth: {
-                            user: process.env.EMAIL_USER,
-                            pass: process.env.EMAIL_PASSWORD
-                        }
-                    });
+                    // let transporter = nodemailer.createTransport({
+                    //     service: "Gmail",
+                    //     auth: {
+                    //         user: process.env.EMAIL_USER,
+                    //         pass: process.env.EMAIL_PASSWORD
+                    //     }
+                    // });
 
                     user.encrypted_password = newPassword;
                     let checkUpdatePass = await user.save({ transaction });
 
-                    let info = await transporter.sendMail({
-                        from: '"Cook Social"', // sender address
-                        to: `${user.email}`, // list of receivers
-                        subject: "Reset Password", // Subject line
-                        text: "Đây là mật khẩu mới của bạn: ", // plain text body
-                        html: `Đây là mật khẩu mới của bạn: ${randomstring}` // html body
-                    }).then(async () => {
-                        await transaction.commit();
-                        return resolve({
-                            messageCode: 1,
-                            message: "sent password success!",
-                        });
-                    }).catch(async (e) => {
-                        await transaction.rollback();
-                        console.log(e)
-                        return resolve({
-                            messageCode: 2,
-                            message: "sent password fail!",
-                        });
-                    })
+                    // let info = await transporter.sendMail({
+                    //     from: '"Cook Social"', // sender address
+                    //     to: `${user.email}`, // list of receivers
+                    //     subject: "Reset Password", // Subject line
+                    //     text: "Đây là mật khẩu mới của bạn: ", // plain text body
+                    //     html: `Đây là mật khẩu mới của bạn: ${randomstring}` // html body
+                    // })
+                    const content = `Đây là mật khẩu mới của bạn: ${randomstring}`;
+                    await sendMail(user.email, content)
+                        .then(async () => {
+                            await transaction.commit();
+                            return resolve({
+                                messageCode: 1,
+                                message: "sent password success!",
+                            });
+                        }).catch(async (e) => {
+                            await transaction.rollback();
+                            console.log(e)
+                            return resolve({
+                                messageCode: 2,
+                                message: "sent password fail!",
+                            });
+                        })
                     // await transaction.commit();
                     // if (info) {
 
@@ -355,32 +361,35 @@ const authService = {
         return new Promise(async (resolve, reject) => {
             try {
                 let accessTokenForActive = authService.generateTokenForActive(req.user)
-                let transporter = nodemailer.createTransport({
-                    service: "Gmail",
-                    auth: {
-                        user: process.env.EMAIL_USER,
-                        pass: process.env.EMAIL_PASSWORD
-                    }
-                });
-                let info = await transporter.sendMail({
-                    from: '"Cook Social"<admin>', // sender address
-                    to: `${req.user.email}`, // list of receivers
-                    subject: "Active Account", // Subject line
-                    // text: "Click link to verify account: ", // plain text body
-                    html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
-                }).then(async () => {
-                    return resolve({
-                        messageCode: 1,
-                        message: 'sent email success!',
-                        // accessToken
-                    });
-                }).catch(async (e) => {
-                    console.log(e)
-                    return resolve({
-                        messageCode: 0,
-                        message: "sent mail fail!",
-                    });
-                })
+                // let transporter = nodemailer.createTransport({
+                //     service: "Gmail",
+                //     auth: {
+                //         user: process.env.EMAIL_USER,
+                //         pass: process.env.EMAIL_PASSWORD
+                //     }
+                // });
+                // let info = await transporter.sendMail({
+                //     from: '"Cook Social"<admin>', // sender address
+                //     to: `${req.user.email}`, // list of receivers
+                //     subject: "Active Account", // Subject line
+                //     // text: "Click link to verify account: ", // plain text body
+                //     html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
+                // })
+                const content = `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>`
+                await sendMail(req.user.email, content)
+                    .then(async () => {
+                        return resolve({
+                            messageCode: 1,
+                            message: 'sent email success!',
+                            // accessToken
+                        });
+                    }).catch(async (e) => {
+                        console.log(e)
+                        return resolve({
+                            messageCode: 0,
+                            message: "sent mail fail!",
+                        });
+                    })
             } catch (error) {
                 console.log(error)
                 reject({
