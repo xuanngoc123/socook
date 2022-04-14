@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 const { getUrlImage } = require("../config/multer");
 const sendMail = require("../config/nodemailer");
+const { Op } = require("sequelize");
 
 const authService = {
     resolveRegisterUser: async (data) => {
@@ -83,7 +84,7 @@ const authService = {
                 else {
                     return resolve({
                         messageCode: 2,
-                        message: 'registered email!'
+                        message: 'registered email or registered username!'
                     });
                 }
             } catch (error) {
