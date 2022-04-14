@@ -103,8 +103,8 @@ const authService = {
                 jwt.verify(req.body.access, process.env.VERIFY_TOKEN_KEY, async (err, data) => {
                     if (err) {
                         return resolve({
-                            messageCode: 0,
-                            message: 'verify fail!'
+                            messageCode: 3,
+                            message: 'token invalid!'
                         })
                     } else {
                         let findLoginInfo = await db.Login_info.findOne({
