@@ -11,11 +11,15 @@ const authService = {
             const transaction = await db.sequelize.transaction();
             try {
                 const email = data.body.email;
+                const user_name = data.body.user_name;
                 let findUser = await db.Login_info.findOne({
                     attributes: { email },
-                    where: { email: email },
+                    where: {
+                        [Op.or]: [{ email: email }, { user_name: user_name }]
+                    },
                     raw: true,
                 });
+                console.log(findUser);
                 if (!findUser) {
                     let salt = await bcrypt.genSalt(10);
                     let password = await bcrypt.hash(data.body.password, salt);

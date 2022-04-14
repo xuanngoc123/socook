@@ -21,4 +21,5 @@ router.delete('/delete-recipe', authMiddleware.veryfiToken, recipeController.del
 
 router.put('/allowed-recipe', authMiddleware.veryfiTokenForAdmin, recipeController.allowedRecipe)
 
+
 module.exports = router;

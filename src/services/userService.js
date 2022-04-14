@@ -9,11 +9,19 @@ const userService = {
                     where: { user_id: data.user.user_id },
                     raw: true
                 })
+                let userLoginInfo = await db.Login_info.findOne({
+                    where: {
+                        user_id: user.user_id
+                    },
+                    raw: true
+                })
                 let keyImgAvt = user.avatar_image;
                 let keyImgCover = user.cover_image;
 
                 if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
                 if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
+                user.email = userLoginInfo.email;
+                user.user_name = userLoginInfo.user_name;
                 return resolve({
                     messageCode: 1,
                     message: 'get my info success!',
@@ -74,11 +82,19 @@ const userService = {
                         message: 'user not found!'
                     })
                 }
+                let userLoginInfo = await db.Login_info.findOne({
+                    where: {
+                        user_id: user.user_id
+                    },
+                    raw: true
+                })
                 let keyImgAvt = user.avatar_image;
                 let keyImgCover = user.cover_image;
 
                 if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
                 if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
+                user.email = userLoginInfo.email;
+                user.user_name = userLoginInfo.user_name;
                 return resolve({
                     messageCode: 1,
                     message: 'get user info success!',
