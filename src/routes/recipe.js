@@ -11,11 +11,11 @@ router.get('/my-list-recipe', authMiddleware.veryfiToken, recipeController.getMy
 
 router.get('/user-list-recipe', recipeController.getUserListRecipe)
 
-router.post('/create-recipe', authMiddleware.veryfiToken, upload.any(), validateRecipe.validateCreateRecipe(), recipeController.createRecipe)
+router.post('/create-recipe', authMiddleware.veryfiToken, upload.any(), recipeController.createRecipe)
 
 router.get('/wait-recipe', authMiddleware.veryfiToken, recipeController.getWaitRecipe)
 
-router.put('/update-recipe', authMiddleware.veryfiToken, upload.any(), validateRecipe.validateUpdateRecipe(), recipeController.updateRecipe)
+router.put('/update-recipe', authMiddleware.veryfiToken, upload.any(), recipeController.updateRecipe)
 
 router.delete('/delete-recipe', authMiddleware.veryfiToken, recipeController.deleteRecipe)
 

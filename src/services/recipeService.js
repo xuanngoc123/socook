@@ -155,7 +155,6 @@ const recipeService = {
         return new Promise(async (resolve, reject) => {
             const transaction = await db.sequelize.transaction();
             try {
-                let number_of_step = req.body.number_of_step;
 
                 // CREATE TABLE RECIPE
                 let createRecipe = await db.Recipe.create({
@@ -179,11 +178,11 @@ const recipeService = {
 
 
                 // CREATE TABLE STEP
-                for (let i = 1; i <= number_of_step; i++) {
+                if (req.body.stepcontent.length == 1) {
                     let createStep = await db.Step.create({
                         recipe_id: createRecipe.id,
                         number: i,
-                        content: req.body.step[i - 1]
+                        content: req.body.stepcontent
                     }, { transaction })
                     let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
                     let numberOfImageEachStep = listImgae.length;
@@ -195,22 +194,111 @@ const recipeService = {
                     }
                     createStep.image_url_list = list_key;
                     await createStep.save({ transaction });
+                } else {
+                    for (let i = 1; i <= req.body.stepcontent.length; i++) {
+                        let createStep = await db.Step.create({
+                            recipe_id: createRecipe.id,
+                            number: i,
+                            content: req.body.stepcontent[i - 1]
+                        }, { transaction })
+                        let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
+                        let numberOfImageEachStep = listImgae.length;
+                        let list_key = '';
+                        if (numberOfImageEachStep > 0) {
+                            for (let i = 0; i < numberOfImageEachStep; i++) {
+                                list_key = list_key + ' ' + listImgae[i].key
+                            }
+                        }
+                        createStep.image_url_list = list_key;
+                        await createStep.save({ transaction });
+                    }
                 }
+
                 //CREATE TABLE CATEGORY HAS RECIPE
                 let category = req.body.category;
                 let categoryLength = category.length;
-                for (let i = 0; i < categoryLength; i++) {
+                if (categoryLength == 1) {
                     let category_id = await db.Category.findOne({
-                        where: { name: category[i] }
+                        where: { name: category }
                     })
                     await db.Category_has_recipe.create({
                         recipe_id: createRecipe.id,
                         category_id: category_id.id,
                     }, { transaction })
+                } else {
+                    for (let i = 0; i < categoryLength; i++) {
+                        let category_id = await db.Category.findOne({
+                            where: { name: category[i] }
+                        })
+                        await db.Category_has_recipe.create({
+                            recipe_id: createRecipe.id,
+                            category_id: category_id.id,
+                        }, { transaction })
+                    }
                 }
+
                 //CREATE TABLE INGREDIENT and RECIPE_HAS_INGREDIENT
                 let listIngredient = req.body.ingredient;
                 let listIngredientLength = listIngredient.length;
+                if (listIngredientLength == 1) {
+                    let quantityAndIngredient = listIngredient.split(' ');
+                    let length = quantityAndIngredient.length;
+                    let quantity = quantityAndIngredient[0] + ' ' + quantityAndIngredient[1];
+                    let ingredient = '';
+                    for (let i = 2; i < length; i++) {
+                        ingredient = ingredient + ' ' + quantityAndIngredient[i];
+                    }
+
+                    let findIngredient = await db.Ingredient.findOne({
+                        where: { name: ingredient }
+                    })
+                    if (!findIngredient) {
+                        let createIngredient = await db.Ingredient.create({
+                            name: ingredient
+                        }, { transaction })
+                        let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
+                            recipe_id: createRecipe.id,
+                            ingredient_id: createIngredient.id,
+                            quantity: quantity
+                        }, { transaction })
+                    } else {
+                        let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
+                            recipe_id: createRecipe.id,
+                            ingredient_id: findIngredient.id,
+                            quantity: quantity
+                        }, { transaction })
+                    }
+                } else {
+                    for (let i = 0; i < listIngredientLength; i++) {
+                        let quantityAndIngredient = listIngredient[i].split(' ');
+                        let length = quantityAndIngredient.length;
+                        let quantity = quantityAndIngredient[0] + ' ' + quantityAndIngredient[1];
+                        let ingredient = '';
+                        for (let i = 2; i < length; i++) {
+                            ingredient = ingredient + ' ' + quantityAndIngredient[i];
+                        }
+
+                        let findIngredient = await db.Ingredient.findOne({
+                            where: { name: ingredient }
+                        })
+                        if (!findIngredient) {
+                            let createIngredient = await db.Ingredient.create({
+                                name: ingredient
+                            }, { transaction })
+                            let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
+                                recipe_id: createRecipe.id,
+                                ingredient_id: createIngredient.id,
+                                quantity: quantity
+                            }, { transaction })
+                        } else {
+                            let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
+                                recipe_id: createRecipe.id,
+                                ingredient_id: findIngredient.id,
+                                quantity: quantity
+                            }, { transaction })
+                        }
+                    }
+                }
                 for (let i = 0; i < listIngredientLength; i++) {
                     let quantityAndIngredient = listIngredient[i].split(' ');
                     let length = quantityAndIngredient.length;
@@ -284,8 +372,8 @@ const recipeService = {
     },
     resolveUpdateRecipe: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
-                let number_of_step = req.body.number_of_step;
 
                 // UPDATE TABLE RECIPE
                 let findRecipe = await db.Recipe.findOne({
@@ -301,31 +389,32 @@ const recipeService = {
                         message: 'you are not allowed!'
                     })
                 }
-                if (req.body.title) findRecipe.title = req.body.title
-                if (req.body.short_description) findRecipe.short_description = req.body.short_description
-                if (req.body.amount_of_people) findRecipe.amount_of_people = req.body.amount_of_people
-                if (req.body.cooking_time) findRecipe.cooking_time = req.body.cooking_time
+                findRecipe.title = req.body.title
+                findRecipe.short_description = req.body.short_description
+                findRecipe.amount_of_people = req.body.amount_of_people
+                findRecipe.cooking_time = req.body.cooking_time
+
                 findRecipe.last_update = Date.now()
                 findRecipe.update_by = req.user.user_id
-                await findRecipe.save();
+                await findRecipe.save({ transaction });
 
                 let main_image_url = req.files.filter(x => x.fieldname == 'main_image_url');
                 if (main_image_url.length > 0) {
                     findRecipe.main_image_url = main_image_url[0].key;
-                    await findRecipe.save();
+                    await findRecipe.save({ transaction });
                 }
 
 
-                // CREATE TABLE STEP
+                // UPDATE TABLE STEP
                 let destroyStep = await db.Step.destroy({
                     where: { recipe_id: findRecipe.id, }
-                })
-                for (let i = 1; i <= number_of_step; i++) {
+                }, { transaction })
+                if (req.body.stepcontent.length == 1) {
                     let createStep = await db.Step.create({
                         recipe_id: findRecipe.id,
                         number: i,
-                        content: req.body.step[i - 1]
-                    })
+                        content: req.body.stepcontent
+                    }, { transaction })
                     let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
                     let numberOfImageEachStep = listImgae.length;
                     let list_key = '';
@@ -335,8 +424,27 @@ const recipeService = {
                         }
                     }
                     createStep.image_url_list = list_key;
-                    await createStep.save();
+                    await createStep.save({ transaction });
+                } else {
+                    for (let i = 1; i <= req.body.stepcontent.length; i++) {
+                        let createStep = await db.Step.create({
+                            recipe_id: findRecipe.id,
+                            number: i,
+                            content: req.body.stepcontent[i - 1]
+                        }, { transaction })
+                        let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
+                        let numberOfImageEachStep = listImgae.length;
+                        let list_key = '';
+                        if (numberOfImageEachStep > 0) {
+                            for (let i = 0; i < numberOfImageEachStep; i++) {
+                                list_key = list_key + ' ' + listImgae[i].key
+                            }
+                        }
+                        createStep.image_url_list = list_key;
+                        await createStep.save({ transaction });
+                    }
                 }
+
 
                 // let findStep = await db.Step.findAll({
                 //     where: { recipe_id: findRecipe.id, },
@@ -410,32 +518,44 @@ const recipeService = {
                 //     }
                 // }
 
-
-
                 //Update TABLE CATEGORY HAS RECIPE
                 await db.Category_has_recipe.destroy({
                     where: { recipe_id: findRecipe.id }
-                })
+                }, { transaction })
 
                 let category = req.body.category;
                 let categoryLength = category.length;
-                for (let i = 0; i < categoryLength; i++) {
+
+                if (categoryLength == 1) {
                     let category_id = await db.Category.findOne({
-                        where: { name: category[i] }
+                        where: { name: category }
                     })
+
                     await db.Category_has_recipe.create({
                         recipe_id: findRecipe.id,
                         category_id: category_id.id,
-                    })
+                    }, { transaction })
+                } else {
+                    for (let i = 0; i < categoryLength; i++) {
+                        let category_id = await db.Category.findOne({
+                            where: { name: category[i] }
+                        })
+
+                        await db.Category_has_recipe.create({
+                            recipe_id: findRecipe.id,
+                            category_id: category_id.id,
+                        }, { transaction })
+                    }
                 }
+
                 //UPDATE TABLE INGREDIENT and RECIPE_HAS_INGREDIENT
                 await db.Recipe_has_ingredient.destroy({
                     where: { recipe_id: findRecipe.id }
-                })
+                }, { transaction })
                 let listIngredient = req.body.ingredient;
                 let listIngredientLength = listIngredient.length;
-                for (let i = 0; i < listIngredientLength; i++) {
-                    let quantityAndIngredient = listIngredient[i].split(' ');
+                if (listIngredientLength == 1) {
+                    let quantityAndIngredient = listIngredient.split(' ');
                     let length = quantityAndIngredient.length;
                     let quantity = quantityAndIngredient[0] + ' ' + quantityAndIngredient[1];
                     let ingredient = '';
@@ -449,27 +569,60 @@ const recipeService = {
                     if (!findIngredient) {
                         let createIngredient = await db.Ingredient.create({
                             name: ingredient
-                        })
+                        }, { transaction })
                         let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
                             recipe_id: findRecipe.id,
                             ingredient_id: createIngredient.id,
                             quantity: quantity
-                        })
+                        }, { transaction })
                     } else {
                         let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
                             recipe_id: findRecipe.id,
                             ingredient_id: findIngredient.id,
                             quantity: quantity
+                        }, { transaction })
+                    }
+                } else {
+                    for (let i = 0; i < listIngredientLength; i++) {
+                        let quantityAndIngredient = listIngredient[i].split(' ');
+                        let length = quantityAndIngredient.length;
+                        let quantity = quantityAndIngredient[0] + ' ' + quantityAndIngredient[1];
+                        let ingredient = '';
+                        for (let i = 2; i < length; i++) {
+                            ingredient = ingredient + ' ' + quantityAndIngredient[i];
+                        }
+
+                        let findIngredient = await db.Ingredient.findOne({
+                            where: { name: ingredient }
                         })
+                        if (!findIngredient) {
+                            let createIngredient = await db.Ingredient.create({
+                                name: ingredient
+                            }, { transaction })
+                            let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
+                                recipe_id: findRecipe.id,
+                                ingredient_id: createIngredient.id,
+                                quantity: quantity
+                            }, { transaction })
+                        } else {
+                            let createRecipeHasIngredient = await db.Recipe_has_ingredient.create({
+                                recipe_id: findRecipe.id,
+                                ingredient_id: findIngredient.id,
+                                quantity: quantity
+                            }, { transaction })
+                        }
                     }
                 }
+
+                await transaction.commit()
                 return resolve({
                     messageCode: 1,
                     message: 'update recipe success!'
                 })
 
             } catch (error) {
-                console.log("create recipe: " + error)
+                console.log(error)
+                await transaction.rollback()
                 reject({
                     messageCode: 0,
                     message: 'update recipe fail!'

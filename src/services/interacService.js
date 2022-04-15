@@ -101,6 +101,7 @@ const interacService = {
     },
     resolveUpdateComment: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 let findComment = await db.Comment.findOne({
                     where: { id: req.body.id }
@@ -111,14 +112,27 @@ const interacService = {
                         message: 'you are not allowed!'
                     })
                 }
+                let listImgae = req.files.filter(x => x.fieldname == 'imagecomment');
+                let numberOfImageEachStep = listImgae.length;
                 findComment.content = req.body.content;
-                await findComment.save();
+                if (numberOfImageEachStep > 0) {
+                    let list_key = '';
+                    if (numberOfImageEachStep > 0) {
+                        for (let i = 0; i < numberOfImageEachStep; i++) {
+                            list_key = list_key + ' ' + listImgae[i].key
+                        }
+                    }
+                    findComment.image_url_list = list_key;
+                }
+                await findComment.save({ transaction });
+                await transaction.commit();
                 return resolve({
                     messageCode: 1,
                     message: 'update your comment success!'
                 })
             } catch (error) {
                 console.log(error)
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'update your comment fail!'
