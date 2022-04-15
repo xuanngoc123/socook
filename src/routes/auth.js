@@ -7,7 +7,7 @@ const { validateAuth } = require('../middlewares/authValidate');
 //register
 router.post('/register', validateAuth.validateRegisterUser(), authController.registerUser);
 
-router.post('/verify', validateAuth.validateVerifyUser(), authController.veryfiUser);
+router.put('/verify', validateAuth.validateVerifyUser(), authController.veryfiUser);
 
 router.post('/resentlink', authMiddleware.veryfiToken, authController.reSentLink);
 

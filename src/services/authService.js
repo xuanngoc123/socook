@@ -99,6 +99,7 @@ const authService = {
     },
     resolveVerifyUser: async (req) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
                 jwt.verify(req.body.access, process.env.VERIFY_TOKEN_KEY, async (err, data) => {
                     if (err) {
@@ -107,26 +108,50 @@ const authService = {
                             message: 'token invalid!'
                         })
                     } else {
-                        let findLoginInfo = await db.Login_info.findOne({
+                        await db.Login_info.findOne({
                             where: { user_id: data.user_id }
-                        })
-                        if (findLoginInfo == 1) {
-                            return resolve({
-                                messageCode: 2,
-                                message: 'account activated!',
+                        }).then(result => {
+                            if (result.status == 1) {
+                                return resolve({
+                                    messageCode: 2,
+                                    message: 'account activated!',
+                                })
+                            }
+                            return result;
+                        }).then(async result => {
+                            result.status = 1;
+                            await result.save({ transaction });
+                            await transaction.commit();
+                            let user = await db.User.findOne({
+                                where: {
+                                    user_id: result.user_id
+                                },
+                                raw: true
                             })
-                        }
-                        findLoginInfo.status = 1;
-                        await findLoginInfo.save();
-                        return resolve({
-                            messageCode: 1,
-                            message: 'verify success!',
+                            user.email = result.email;
+                            user.status = result.status;
+                            let accessToken = authService.generateAccessToken(result, user)
+                            let refreshToken = authService.generateRefreshToken(result, user)
+                            return resolve({
+                                messageCode: 1,
+                                message: 'verify success!',
+                                accessToken,
+                                refreshToken,
+                                user
+                            })
+                        }).catch(e => {
+                            console.log(e);
+                            return reject({
+                                messageCode: 0,
+                                message: 'verify fail!'
+                            })
                         })
                     }
 
                 })
             } catch (error) {
                 console.log(error)
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'verify fail!'
@@ -249,25 +274,10 @@ const authService = {
                     let salt = await bcrypt.genSalt(10);
                     let newPassword = await bcrypt.hash(randomstring, salt);
 
-                    // let testAccount = await nodemailer.createTestAccount();
-                    // let transporter = nodemailer.createTransport({
-                    //     service: "Gmail",
-                    //     auth: {
-                    //         user: process.env.EMAIL_USER,
-                    //         pass: process.env.EMAIL_PASSWORD
-                    //     }
-                    // });
 
                     user.encrypted_password = newPassword;
-                    let checkUpdatePass = await user.save({ transaction });
+                    await user.save({ transaction });
 
-                    // let info = await transporter.sendMail({
-                    //     from: '"Cook Social"', // sender address
-                    //     to: `${user.email}`, // list of receivers
-                    //     subject: "Reset Password", // Subject line
-                    //     text: "Đây là mật khẩu mới của bạn: ", // plain text body
-                    //     html: `Đây là mật khẩu mới của bạn: ${randomstring}` // html body
-                    // })
                     const content = `Đây là mật khẩu mới của bạn: ${randomstring}`;
                     await sendMail(user.email, content)
                         .then(async () => {
@@ -304,6 +314,7 @@ const authService = {
     },
     resolveChangePassword: async (data) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction()
             try {
                 let email = data.user.email;
                 var user = await db.Login_info.findOne({
@@ -324,18 +335,13 @@ const authService = {
                         let salt = await bcrypt.genSalt(10);
                         let newEncyptPassword = await bcrypt.hash(newPassword, salt);
                         user.encrypted_password = newEncyptPassword;
-                        let checkChangePass = await user.save();
-                        if (!checkChangePass) {
-                            return resolve({
-                                messageCode: 0,
-                                message: "change password fail!"
-                            })
-                        } else {
-                            return resolve({
-                                messageCode: 1,
-                                message: "change password success!"
-                            })
-                        }
+                        await user.save({ transaction });
+                        transaction.commit();
+                        return resolve({
+                            messageCode: 1,
+                            message: "change password success!"
+                        })
+
                     } else {
                         return resolve({
                             messageCode: 2,
@@ -346,6 +352,7 @@ const authService = {
 
             } catch (error) {
                 console.log(error)
+                transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: "change password fail!"
