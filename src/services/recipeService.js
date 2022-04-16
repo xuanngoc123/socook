@@ -702,6 +702,32 @@ const recipeService = {
             }
         })
     },
+    resolveGetCategory: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let categoryHasGroup = await db.Category_group.findAll({
+                    attributes: ['id', 'name'],
+                    raw: true
+                });
+                for (let i = 0; i < categoryHasGroup.length; i++) {
+                    const category = await db.Category.findAll({
+                        attributes: ['id', 'name'],
+                        where: {
+                            category_group_id: categoryHasGroup[i].id
+                        }
+                    })
+                    categoryHasGroup[i].category = category
+                }
+
+                return resolve({
+                    data: categoryHasGroup
+                })
+            } catch (error) {
+                reject(error)
+            }
+        })
+    },
+
     getUrlImageOfArrRecipe: (listRecipe) => {
         let length = listRecipe.length;
         for (let i = 0; i < length; i++) {

@@ -77,5 +77,13 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    getCategory: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetCategory(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 module.exports = recipeController
