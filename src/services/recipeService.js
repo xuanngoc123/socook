@@ -175,8 +175,6 @@ const recipeService = {
                     createRecipe.main_image_url = main_image_url[0].key;
                     await createRecipe.save({ transaction });
                 }
-
-
                 // CREATE TABLE STEP
                 if (req.body.stepcontent.length == 1) {
                     let createStep = await db.Step.create({
@@ -670,7 +668,7 @@ const recipeService = {
                 })
             } catch (error) {
                 await transaction.rollback();
-                console.log('err delete recipe: ' + error)
+                console.log(error)
                 reject({
                     messageCode: 0,
                     message: 'delete recipe fail!'
@@ -702,7 +700,7 @@ const recipeService = {
             }
         })
     },
-    resolveGetCategory: async (req) => {
+    resolveGetCategory: async () => {
         return new Promise(async (resolve, reject) => {
             try {
                 let categoryHasGroup = await db.Category_group.findAll({
@@ -718,11 +716,11 @@ const recipeService = {
                     })
                     categoryHasGroup[i].category = category
                 }
-
                 return resolve({
                     data: categoryHasGroup
                 })
             } catch (error) {
+                console.log(error);
                 reject(error)
             }
         })

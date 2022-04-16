@@ -1,9 +1,9 @@
-{
+const env = {
     "development": {
         "username": "root",
-        "password": "mot2ba4nam6",
+        "password": process.env.MYSQL_PASS,
         "database": "recipedb",
-        "host": "aa5jr3ty3y77lr.cyfgjqbdi1mp.ap-southeast-1.rds.amazonaws.com",
+        "host": process.env.MYSQL_HOST,
         "dialect": "mysql",
         "define": {
             "freezeTableName": true,
@@ -14,9 +14,9 @@
     },
     "test": {
         "username": "root",
-        "password": "mot2ba4nam6",
+        "password": process.env.MYSQL_PASS,
         "database": "recipedb",
-        "host": "aa5jr3ty3y77lr.cyfgjqbdi1mp.ap-southeast-1.rds.amazonaws.com",
+        "host": process.env.MYSQL_HOST,
         "dialect": "mysql",
         "define": {
             "freezeTableName": true,
@@ -27,9 +27,9 @@
     },
     "production": {
         "username": "root",
-        "password": "mot2ba4nam6",
+        "password": process.env.MYSQL_PASS,
         "database": "recipedb",
-        "host": "aa5jr3ty3y77lr.cyfgjqbdi1mp.ap-southeast-1.rds.amazonaws.com",
+        "host": process.env.MYSQL_HOST,
         "dialect": "mysql",
         "define": {
             "freezeTableName": true,
@@ -39,3 +39,4 @@
         }
     }
 }
+module.exports = env

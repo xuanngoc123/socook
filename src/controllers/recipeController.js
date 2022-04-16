@@ -79,7 +79,7 @@ const recipeController = {
     },
     getCategory: async (req, res) => {
         try {
-            let data = await recipeService.resolveGetCategory(req);
+            let data = await recipeService.resolveGetCategory();
             return res.status(200).json(data);
         } catch (error) {
             return res.status(500).json(error)
