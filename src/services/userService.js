@@ -122,7 +122,9 @@ const userService = {
                 if (!result) {
                     return resolve({
                         messageCode: 2,
-                        message: 'upload image fail!'
+                        message: 'upload image fail!',
+                        req: req,
+                        result: result
                     })
                 }
                 else {
@@ -131,7 +133,8 @@ const userService = {
                     await transaction.commit();
                     return resolve({
                         messageCode: 1,
-                        message: 'change image success!'
+                        message: 'change image success!',
+                        result
                     })
 
                 }
@@ -170,7 +173,8 @@ const userService = {
                     await transaction.commit();
                     return resolve({
                         messageCode: 1,
-                        message: 'change image success!'
+                        message: 'change image success!',
+                        result
                     })
                 }
             } catch (error) {
