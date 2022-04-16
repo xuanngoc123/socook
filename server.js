@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(upload.array());
 // app.use(express.static(path.join(__dirname, "public")));
 
-app.use(cors());
+app.use(cors({ origin: process.env.BASE_URL_FRONTEND }));
 
 app.use(express.json())
 
