@@ -123,7 +123,6 @@ const userService = {
                     return resolve({
                         messageCode: 2,
                         message: 'upload image fail!',
-                        req: req,
                         result: result
                     })
                 }
@@ -134,7 +133,7 @@ const userService = {
                     return resolve({
                         messageCode: 1,
                         message: 'change image success!',
-                        result
+                        result: result
                     })
 
                 }
@@ -163,7 +162,6 @@ const userService = {
                     return resolve({
                         messageCode: 2,
                         message: 'upload image fail!',
-                        req: req,
                         result: result
                     })
                 }
@@ -174,7 +172,7 @@ const userService = {
                     return resolve({
                         messageCode: 1,
                         message: 'change image success!',
-                        result
+                        result: result
                     })
                 }
             } catch (error) {
