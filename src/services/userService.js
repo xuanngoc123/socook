@@ -160,7 +160,8 @@ const userService = {
                     return resolve({
                         messageCode: 2,
                         message: 'upload image fail!',
-                        req
+                        req: req,
+                        result: result
                     })
                 }
                 else {
