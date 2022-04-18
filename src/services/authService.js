@@ -275,6 +275,7 @@ const authService = {
                     return resolve({
                         messageCode: 3,
                         message: "email invalid!"
+
                     })
                 } else {
                     let accessTokenForResetPassword = authService.generateTokenForResetPassword(data.body.email)
