@@ -123,23 +123,23 @@ const recipeService = {
     resolveGetUserListRecipe: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let myListRecipe = await db.Recipe.findAll({
+                let userListRecipe = await db.Recipe.findAll({
                     where: {
                         owner_id: req.body.user_id,
                         is_allowed: 1
                     }
                 })
-                if (!myListRecipe) {
+                if (!userListRecipe) {
                     return resolve({
                         messageCode: 2,
                         message: 'user not fonnd!',
                     })
                 }
-                myListRecipe = recipeService.getUrlImageOfArrRecipe(myListRecipe)
+                userListRecipe = recipeService.getUrlImageOfArrRecipe(userListRecipe)
                 return resolve({
                     messageCode: 1,
                     message: 'get user list recipe success!',
-                    myListRecipe,
+                    userListRecipe,
                 })
 
             } catch (error) {
