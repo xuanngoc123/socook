@@ -22,6 +22,7 @@ router.put('/changepassword', authMiddleware.veryfiToken, validateAuth.validateC
 //fogot password
 router.put('/resetpassword', validateAuth.validateResetPassword(), authController.resetPassword)
 
+router.put('/savepassword', authController.savePassword)
 // check token
 router.get('/checktoken', authMiddleware.checkToken, (req, res) => {
     return res.status(200).json(req.result);

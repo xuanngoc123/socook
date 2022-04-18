@@ -185,6 +185,14 @@ const authService = {
         }
 
     },
+    generateTokenForResetPassword: (email) => {
+        return jwt.sign({
+            email: email,
+        },
+            process.env.RESET_PASS_KEY,
+            { expiresIn: '84600s' }
+        )
+    },
     generateRefreshToken: (loginUser, infoUser) => {
         return jwt.sign({
             user_id: loginUser.user_id,
@@ -270,28 +278,28 @@ const authService = {
                         message: "email invalid!"
                     })
                 } else {
-                    let randomstring = Math.random().toString(36).slice(-8);
-                    let salt = await bcrypt.genSalt(10);
-                    let newPassword = await bcrypt.hash(randomstring, salt);
+                    // let randomstring = Math.random().toString(36).slice(-8);
+                    // let salt = await bcrypt.genSalt(10);
+                    // let newPassword = await bcrypt.hash(randomstring, salt);
 
 
-                    user.encrypted_password = newPassword;
-                    await user.save({ transaction });
-
-                    const content = `Đây là mật khẩu mới của bạn: ${randomstring}`;
+                    // user.encrypted_password = newPassword;
+                    // await user.save({ transaction });
+                    let accessTokenForResetPassword = authService.generateTokenForResetPassword(data.body.email)
+                    const content = `Click link to change new password:  <a href="${process.env.BASE_URL_FRONTEND}/rspassword?access=${accessTokenForResetPassword}">${process.env.BASE_URL_FRONTEND}/rspassword?access=${accessTokenForResetPassword}</a>`;
                     await sendMail(user.email, content)
                         .then(async () => {
                             await transaction.commit();
                             return resolve({
                                 messageCode: 1,
-                                message: "sent password success!",
+                                message: "sent mail success!",
                             });
                         }).catch(async (e) => {
                             await transaction.rollback();
                             console.log(e)
                             return resolve({
-                                messageCode: 2,
-                                message: "sent password fail!",
+                                messageCode: 0,
+                                message: "sent mail fail!",
                             });
                         })
                     // await transaction.commit();
@@ -307,7 +315,51 @@ const authService = {
                 await transaction.rollback();
                 reject({
                     messageCode: 0,
-                    message: "reset password fail!"
+                    message: "sent mail fail!"
+                })
+            }
+        })
+    },
+    resolveSavePassword: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let newPass = req.body.newPassword;
+                let salt = await bcrypt.genSalt(10);
+                let newEncryPassword = await bcrypt.hash(newPass, salt);
+
+                let accessTokenForResetPassword = req.body.access;
+                jwt.verify(accessTokenForResetPassword, process.env.RESET_PASS_KEY, async (err, data) => {
+                    if (err) {
+                        res.status(403).json("token invalid!");
+                    } else {
+                        let userEmail = data.email;
+                        let userInfo = await db.Login_info.findOne({
+                            where: { email: userEmail }
+                        })
+                        if (!userInfo) {
+                            return resolve({
+                                messageCode: 2,
+                                message: 'user not found!'
+                            })
+                        } else {
+                            userInfo.encrypted_password = newEncryPassword;
+                            await userInfo.save({ transaction })
+                            await transaction.commit();
+                            return resolve({
+                                messageCode: 1,
+                                message: 'reset password success!'
+                            })
+                        }
+                    }
+                })
+
+            } catch (error) {
+                console.log(error);
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'reset password fail!'
                 })
             }
         })

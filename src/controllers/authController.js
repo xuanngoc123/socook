@@ -38,6 +38,14 @@ const authController = {
             return res.status(500).json(error)
         }
     },
+    savePassword: async (req, res) => {
+        try {
+            let data = await authService.resolveSavePassword(req);
+            return res.status(200).json(data)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
     changePassword: async (req, res) => {
         try {
             const errors = validationResult(req);
