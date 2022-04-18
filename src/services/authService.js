@@ -266,7 +266,6 @@ const authService = {
     },
     resolveResetPassword: async (data) => {
         return new Promise(async (resolve, reject) => {
-            const transaction = await db.sequelize.transaction();
             try {
                 let email = data.body.email;
                 var user = await db.Login_info.findOne({
@@ -278,41 +277,26 @@ const authService = {
                         message: "email invalid!"
                     })
                 } else {
-                    // let randomstring = Math.random().toString(36).slice(-8);
-                    // let salt = await bcrypt.genSalt(10);
-                    // let newPassword = await bcrypt.hash(randomstring, salt);
-
-
-                    // user.encrypted_password = newPassword;
-                    // await user.save({ transaction });
                     let accessTokenForResetPassword = authService.generateTokenForResetPassword(data.body.email)
                     const content = `Click link to change new password:  <a href="${process.env.BASE_URL_FRONTEND}/rspassword?access=${accessTokenForResetPassword}">${process.env.BASE_URL_FRONTEND}/rspassword?access=${accessTokenForResetPassword}</a>`;
                     await sendMail(user.email, content)
                         .then(async () => {
-                            await transaction.commit();
                             return resolve({
                                 messageCode: 1,
                                 message: "sent mail success!",
                             });
                         }).catch(async (e) => {
-                            await transaction.rollback();
                             console.log(e)
                             return resolve({
                                 messageCode: 0,
                                 message: "sent mail fail!",
                             });
                         })
-                    // await transaction.commit();
-                    // if (info) {
 
-                    // } else {
-
-                    // }
 
                 }
             } catch (error) {
                 console.log(error)
-                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: "sent mail fail!"
