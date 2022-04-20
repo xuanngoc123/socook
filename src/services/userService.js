@@ -56,13 +56,22 @@ const userService = {
                 await user.save({ transaction });
                 await transaction.commit();
 
-                user.avatar_image = getUrlImage(user.avatar_image);
-                user.cover_image = getUrlImage(user.cover_image);
-
+                let userReturn = await db.User.findOne({
+                    where: { user_id: user_id },
+                    raw: true
+                })
+                let login_info = await db.Login_info.findOne({
+                    where: { user_id: user_id },
+                })
+                userReturn.avatar_image = getUrlImage(userReturn.avatar_image);
+                userReturn.cover_image = getUrlImage(userReturn.cover_image);
+                userReturn.status = login_info.status;
+                userReturn.email = login_info.email;
+                userReturn.user_name = login_info.user_name;
                 return resolve({
                     messageCode: 1,
                     message: 'change info success!',
-                    user
+                    user: userReturn
                 })
             } catch (error) {
                 console.log(error);
@@ -133,12 +142,24 @@ const userService = {
                     user.avatar_image = result.key;
                     await user.save({ transaction });
                     await transaction.commit();
-                    user.avatar_image = getUrlImage(user.avatar_image)
-                    user.cover_image = getUrlImage(user.cover_image)
+
+                    let userReturn = await db.User.findOne({
+                        where: { user_id: user_id },
+                        raw: true
+                    })
+                    let login_info = await db.Login_info.findOne({
+                        where: { user_id: user_id },
+                        raw: true
+                    })
+                    userReturn.avatar_image = getUrlImage(userReturn.avatar_image);
+                    userReturn.cover_image = getUrlImage(userReturn.cover_image);
+                    userReturn.status = login_info.status;
+                    userReturn.email = login_info.email;
+                    userReturn.user_name = login_info.user_name;
                     return resolve({
                         messageCode: 1,
                         message: 'change image success!',
-                        user
+                        user: userReturn
                     })
 
                 }
@@ -173,12 +194,23 @@ const userService = {
                     user.cover_image = result.key;
                     await user.save({ transaction });
                     await transaction.commit();
-                    user.cover_image = getUrlImage(user.cover_image)
-                    user.avatar_image = getUrlImage(user.avatar_image)
+                    let userReturn = await db.User.findOne({
+                        where: { user_id: user_id },
+                        raw: true
+                    })
+                    let login_info = await db.Login_info.findOne({
+                        where: { user_id: user_id },
+                        raw: true
+                    })
+                    userReturn.avatar_image = getUrlImage(userReturn.avatar_image);
+                    userReturn.cover_image = getUrlImage(userReturn.cover_image);
+                    userReturn.status = login_info.status;
+                    userReturn.email = login_info.email;
+                    userReturn.user_name = login_info.user_name;
                     return resolve({
                         messageCode: 1,
                         message: 'change image success!',
-                        user
+                        user: userReturn
                     })
                 }
             } catch (error) {

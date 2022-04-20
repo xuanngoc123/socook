@@ -61,7 +61,6 @@ const authService = {
                             let findUser = await db.User.findOne({
                                 where: { user_id: createUser.user_id },
                                 raw: true,
-                                attributes: ['user_id', 'avatar_image']
                             })
                             findUser.status = 0;
                             findUser.email = createLoginInfo.email;
@@ -233,7 +232,6 @@ const authService = {
                         let infoUser = await db.User.findOne({
                             where: { user_id: findUser.user_id },
                             raw: true,
-                            attributes: ['user_id', 'avatar_image']
                         })
                         if (infoUser.avatar_image) infoUser.avatar_image = getUrlImage(infoUser.avatar_image);
                         if (infoUser.cover_image) infoUser.cover_image = getUrlImage(infoUser.cover_image);
