@@ -11,7 +11,7 @@ const authService = {
         return new Promise(async (resolve, reject) => {
             const transaction = await db.sequelize.transaction();
             try {
-                const email = data.body.email;
+                const email = data.body.email.toLowerCase();
                 const user_name = data.body.user_name;
                 let findUser = await db.Login_info.findOne({
                     attributes: { email },
@@ -409,28 +409,26 @@ const authService = {
     resolveReSentLink: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
+                let userLogin = await db.Login_info.findOne({
+                    where: {
+                        user_id: req.user.user_id
+                    }
+                })
+                if (userLogin.status != 0) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'acount activated!',
+                    });
+                }
                 let accessTokenForActive = authService.generateTokenForActive(req.user)
-                // let transporter = nodemailer.createTransport({
-                //     service: "Gmail",
-                //     auth: {
-                //         user: process.env.EMAIL_USER,
-                //         pass: process.env.EMAIL_PASSWORD
-                //     }
-                // });
-                // let info = await transporter.sendMail({
-                //     from: '"Cook Social"<admin>', // sender address
-                //     to: `${req.user.email}`, // list of receivers
-                //     subject: "Active Account", // Subject line
-                //     // text: "Click link to verify account: ", // plain text body
-                //     html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
-                // })
+
                 const content = `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>`
                 await sendMail(req.user.email, content)
-                    .then(async () => {
+                    .then(async (result) => {
+                        console.log(result);
                         return resolve({
                             messageCode: 1,
                             message: 'sent email success!',
-                            // accessToken
                         });
                     }).catch(async (e) => {
                         console.log(e)

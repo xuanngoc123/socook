@@ -15,11 +15,9 @@ const userService = {
                     },
                     raw: true
                 })
-                let keyImgAvt = user.avatar_image;
-                let keyImgCover = user.cover_image;
 
-                if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
-                if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
+                user.avatar_image = getUrlImage(user.avatar_image);
+                user.cover_image = getUrlImage(user.cover_image);
                 user.email = userLoginInfo.email;
                 user.user_name = userLoginInfo.user_name;
                 return resolve({
@@ -53,11 +51,18 @@ const userService = {
                 if (data.body.district) user.district = data.body.district;
                 user.last_update = Date.now();
 
+
+
                 await user.save({ transaction });
                 await transaction.commit();
+
+                user.avatar_image = getUrlImage(user.avatar_image);
+                user.cover_image = getUrlImage(user.cover_image);
+
                 return resolve({
                     messageCode: 1,
-                    message: 'change info success!'
+                    message: 'change info success!',
+                    user
                 })
             } catch (error) {
                 console.log(error);
@@ -88,11 +93,10 @@ const userService = {
                     },
                     raw: true
                 })
-                let keyImgAvt = user.avatar_image;
-                let keyImgCover = user.cover_image;
 
-                if (user.avatar_image) user.avatar_image = getUrlImage(keyImgAvt);
-                if (user.cover_image) user.cover_image = getUrlImage(keyImgCover);
+                user.avatar_image = getUrlImage(user.avatar_image);
+                user.cover_image = getUrlImage(user.cover_image);
+
                 user.email = userLoginInfo.email;
                 user.user_name = userLoginInfo.user_name;
                 return resolve({
@@ -123,17 +127,18 @@ const userService = {
                     return resolve({
                         messageCode: 2,
                         message: 'upload image fail!',
-                        result: result
                     })
                 }
                 else {
                     user.avatar_image = result.key;
                     await user.save({ transaction });
                     await transaction.commit();
+                    user.avatar_image = getUrlImage(user.avatar_image)
+                    user.cover_image = getUrlImage(user.cover_image)
                     return resolve({
                         messageCode: 1,
                         message: 'change image success!',
-                        result: result
+                        user
                     })
 
                 }
@@ -162,17 +167,18 @@ const userService = {
                     return resolve({
                         messageCode: 2,
                         message: 'upload image fail!',
-                        result: result
                     })
                 }
                 else {
                     user.cover_image = result.key;
                     await user.save({ transaction });
                     await transaction.commit();
+                    user.cover_image = getUrlImage(user.cover_image)
+                    user.avatar_image = getUrlImage(user.avatar_image)
                     return resolve({
                         messageCode: 1,
                         message: 'change image success!',
-                        result: result
+                        user
                     })
                 }
             } catch (error) {

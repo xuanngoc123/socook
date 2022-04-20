@@ -2,10 +2,9 @@ const db = require('../models/index')
 const { getUrlImage } = require('../config/multer')
 
 const recipeService = {
-    resolveGetRecipe: async (req) => {
+    resolveGetRecipe: async (id) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let id = req.query.id;
                 let recipe = await db.Recipe.findOne({
                     where: { id: id },
                     raw: true
@@ -327,9 +326,11 @@ const recipeService = {
                     }
                 }
                 await transaction.commit();
+                let recipe = recipeService.resolveGetRecipe(createRecipe.id);
                 return resolve({
                     messageCode: 1,
-                    message: 'create recipe success!'
+                    message: 'create recipe success!',
+                    data: recipe
                 })
 
             } catch (error) {
@@ -372,7 +373,6 @@ const recipeService = {
         return new Promise(async (resolve, reject) => {
             const transaction = await db.sequelize.transaction();
             try {
-
                 // UPDATE TABLE RECIPE
                 let findRecipe = await db.Recipe.findOne({
                     where: { id: req.body.recipe_id }
@@ -613,9 +613,11 @@ const recipeService = {
                 }
 
                 await transaction.commit()
+                let recipe = recipeService.resolveGetRecipe(findRecipe.id);
                 return resolve({
                     messageCode: 1,
-                    message: 'update recipe success!'
+                    message: 'update recipe success!',
+                    data: recipe
                 })
 
             } catch (error) {
