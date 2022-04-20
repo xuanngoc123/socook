@@ -20,7 +20,6 @@ const authService = {
                     },
                     raw: true,
                 });
-                console.log(findUser);
                 if (!findUser) {
                     let salt = await bcrypt.genSalt(10);
                     let password = await bcrypt.hash(data.body.password, salt);
@@ -61,10 +60,12 @@ const authService = {
                             await transaction.commit();
                             let findUser = await db.User.findOne({
                                 where: { user_id: createUser.user_id },
-                                raw: true
+                                raw: true,
+                                attributes: ['user_id', 'avatar_image']
                             })
                             findUser.status = 0;
                             findUser.email = createLoginInfo.email;
+                            findUser.user_name = createLoginInfo.user_name;
                             return resolve({
                                 messageCode: 1,
                                 message: 'successful registration!',
@@ -232,6 +233,7 @@ const authService = {
                         let infoUser = await db.User.findOne({
                             where: { user_id: findUser.user_id },
                             raw: true,
+                            attributes: ['user_id', 'avatar_image']
                         })
                         if (infoUser.avatar_image) infoUser.avatar_image = getUrlImage(infoUser.avatar_image);
                         if (infoUser.cover_image) infoUser.cover_image = getUrlImage(infoUser.cover_image);
@@ -239,6 +241,7 @@ const authService = {
                         const refreshToken = authService.generateRefreshToken(findUser, infoUser);
                         infoUser.status = findUser.status;
                         infoUser.email = findUser.email;
+                        infoUser.user_name = findUser.user_name
                         return resolve({
                             messageCode: 1,
                             message: "login success!",
