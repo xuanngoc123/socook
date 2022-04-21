@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
             // this.hasOne(models.login_info, {sourceKey: 'user_id'});
             // this.belongsToMany(models.Recipe_has_ingredient, { targetKey: 'id' });
-            this.hasMany(models.Recipe_has_ingredient, { foreignKey: { name: 'ingredient_id' } })
+            // this.hasMany(models.Recipe_has_ingredient, { foreignKey: { name: 'ingredient_id' } })
         }
     }
     Ingredient.init({

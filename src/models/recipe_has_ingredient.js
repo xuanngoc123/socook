@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            this.hasOne(models.Ingredient, { foreignKey: { name: 'id' } });
+            // this.hasOne(models.Ingredient, { foreignKey: { name: 'id' } });
         }
     }
     Recipe_has_ingredient.init({

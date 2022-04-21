@@ -2,13 +2,25 @@ const { check } = require('express-validator');
 
 let validateCreateRecipe = () => {
     return [
-        check('number_of_step', 'number_of_step does not Empty').not().isEmpty(),
+        check('short_description', 'short_description does not Empty').not().isEmpty(),
+        check('amount_of_people', 'amount_of_people does not Empty').not().isEmpty(),
+        check('cooking_time', 'cooking_time does not Empty').not().isEmpty(),
+        check('title', 'title does not Empty').not().isEmpty(),
+        check('stepcontent', 'stepcontent does not Empty').not().isEmpty(),
+        check('category', 'category does not Empty').not().isEmpty(),
+        check('ingredient', 'ingredient does not Empty').not().isEmpty(),
     ];
 }
 let validateUpdateRecipe = () => {
     return [
-        check('number_of_step', 'number_of_step does not Empty').not().isEmpty(),
         check('recipe_id', 'recipe_id does not Empty').not().isEmpty(),
+        check('short_description', 'short_description does not Empty').not().isEmpty(),
+        check('amount_of_people', 'amount_of_people does not Empty').not().isEmpty(),
+        check('cooking_time', 'cooking_time does not Empty').not().isEmpty(),
+        check('title', 'title does not Empty').not().isEmpty(),
+        check('stepcontent', 'stepcontent does not Empty').not().isEmpty(),
+        check('category', 'category does not Empty').not().isEmpty(),
+        check('ingredient', 'ingredient does not Empty').not().isEmpty(),
     ];
 }
 let validateRecipe = {

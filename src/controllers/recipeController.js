@@ -11,6 +11,14 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    getCommentOfRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetCommentOfRecipe(req.query.id);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
     getMyListRecipe: async (req, res) => {
         try {
             let data = await recipeService.resolveGetMyListRecipe(req);
@@ -52,8 +60,9 @@ const recipeController = {
     },
     updateRecipe: async (req, res) => {
         try {
-            if (req.fileValidationError) {
-                return res.status(422).json(req.fileValidationError);
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(422).json({ errors: errors.array() });
             }
             let data = await recipeService.resolveUpdateRecipe(req);
             return res.status(200).json(data);
