@@ -722,12 +722,34 @@ const recipeService = {
     },
 
     getUrlImageOfArrRecipe: (listRecipe) => {
+        if (!listRecipe) return listRecipe;
         let length = listRecipe.length;
         for (let i = 0; i < length; i++) {
             listRecipe[i].main_image_url = getUrlImage(listRecipe[i].main_image_url)
         }
         return listRecipe
-    }
+    },
+    resolveGetRecipeOfCollection: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const [listRecipe, lrc_metadata] = await db.sequelize.query(
+                    `SELECT recipe.* FROM recipe JOIN collection_has_recipe ON recipe.id = collection_has_recipe.recipe_id WHERE collection_has_recipe.collection_id = ${req.query.id};`
+                );
+                recipeService.getUrlImageOfArrRecipe(listRecipe);
+                return resolve({
+                    messageCode: 1,
+                    message: 'get recipe of collection success!',
+                    data: listRecipe
+                })
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get recipe of collection fail!',
+                })
+            }
+        })
+    },
 }
 
 module.exports = recipeService;

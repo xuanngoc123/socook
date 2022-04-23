@@ -94,5 +94,13 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    getRecipeOfCollection: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetRecipeOfCollection(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 module.exports = recipeController

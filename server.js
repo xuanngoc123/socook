@@ -3,15 +3,17 @@ if (process.env.NODE_ENV !== 'production') {
 }
 const express = require('express')
 const app = express()
-const passport = require('passport')
+const passport = require('./src/config/passport')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 const connectDB = require('./src/config/connectDB')
 const path = require('path');
 const { upload } = require('./src/config/multer')
 const fs = require('fs');
-
+// const http = require('http')
+// let server = http.createServer(app)
 // app.use(express.static('/public'));
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -21,6 +23,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors({ origin: process.env.BASE_URL_FRONTEND }));
 
 app.use(express.json())
+
+app.use(passport.initialize());
 
 connectDB();
 
