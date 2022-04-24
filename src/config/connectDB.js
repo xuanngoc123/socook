@@ -3,7 +3,7 @@ const { Sequelize } = require('sequelize');
 // Option 3: Passing parameters separately (other dialects)
 
 const sequelize = new Sequelize('recipedb', 'root', process.env.MYSQL_PASS, {
-    host: process.env.MYSQL_HOSt,
+    host: process.env.MYSQL_HOST,
     dialect: 'mysql',
     // timezone: 'utc'
 });
