@@ -1,13 +1,14 @@
 const db = require('../models/index')
 const { getUrlImage } = require('../config/multer')
-
+const requestIp = require('request-ip');
 const recipeService = {
-    resolveGetRecipe: async (id) => {
+    getRecipeById: async (id) => {
         return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
             try {
+
                 let recipe = await db.Recipe.findOne({
                     where: { id: id },
-                    raw: true
                 })
                 if (!recipe) {
                     return resolve({
@@ -48,6 +49,7 @@ const recipeService = {
 
 
 
+                    await transaction.commit();
 
                     let data = {
                         recipe,
@@ -64,7 +66,108 @@ const recipeService = {
                     })
                 }
             } catch (error) {
-                console.log(error)
+                console.log(error);
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'get recipe fail!'
+                })
+            }
+        })
+    },
+    resolveGetRecipe: async (id, req = null) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+
+                let recipe = await db.Recipe.findOne({
+                    where: { id: id },
+                })
+                if (!recipe) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'recipe not found!'
+                    })
+                } else {
+                    let ip = requestIp.getClientIp(req);
+                    let findIp = await db.Ip_view.findOne({
+                        where: {
+                            ip_address: ip,
+                            recipe_id: id
+                        }
+                    })
+                    if (!findIp) {
+                        let createIp = await db.Ip_view.create({
+                            ip_address: ip,
+                            recipe_id: id,
+                            total_views: 1
+                        }, { transaction })
+                        recipe.total_views++;
+                        await recipe.save({ transaction });
+                    } else {
+                        if (findIp.total_views < 3) {
+                            recipe.total_views++;
+                            findIp.total_views++;
+                            await recipe.save({ transaction });
+                            await findIp.save({ transaction });
+                        } else {
+                            findIp.total_views++;
+                            await findIp.save({ transaction });
+                        }
+                    }
+
+                    if (recipe.main_image_url) recipe.main_image_url = getUrlImage(recipe.main_image_url);
+
+                    let step = await db.Step.findAll({
+                        where: { recipe_id: recipe.id },
+                        raw: true
+                    })
+
+                    for (let i = 0; i < step.length; i++) {
+                        if (step[i].image_url_list != '' && step[i].image_url_list != null) {
+
+                            let listKey = step[i].image_url_list.trim().split(' ');
+
+                            let listUrl = '';
+                            for (let j = 0; j < listKey.length; j++) {
+                                listUrl = listUrl + ' ' + getUrlImage(listKey[j])
+                            }
+                            step[i].image_url_list = listUrl;
+                        }
+                    }
+                    let likes = await db.Like.count({
+                        where: { recipe_id: recipe.id }
+                    })
+
+                    const [ingredient, igde_metadata] = await db.sequelize.query(
+                        `SELECT i.id, i.name, rhi.quantity  FROM recipe_has_ingredient AS rhi JOIN ingredient as i ON rhi.ingredient_id = i.id WHERE rhi.recipe_id = ${id};`
+                    );
+
+                    const [category, ctgr_metadata] = await db.sequelize.query(
+                        `SELECT category.id, category.name FROM category JOIN category_has_recipe on category.id = category_has_recipe.category_id WHERE category_has_recipe.recipe_id = ${id};`
+                    );
+
+
+
+                    await transaction.commit();
+
+                    let data = {
+                        recipe,
+                        step,
+                        likes,
+                        category,
+                        ingredient,
+                    }
+
+                    return resolve({
+                        messageCode: 1,
+                        message: 'get recipe success!',
+                        data
+                    })
+                }
+            } catch (error) {
+                console.log(error);
+                await transaction.rollback();
                 reject({
                     messageCode: 0,
                     message: 'get recipe fail!'
@@ -321,7 +424,7 @@ const recipeService = {
                 }
 
                 await transaction.commit();
-                let recipe = await recipeService.resolveGetRecipe(createRecipe.id);
+                let recipe = await recipeService.getRecipeById(createRecipe.id);
                 return resolve({
                     messageCode: 1,
                     message: 'create recipe success!',
@@ -606,7 +709,7 @@ const recipeService = {
                 }
 
                 await transaction.commit()
-                let recipe = await recipeService.resolveGetRecipe(findRecipe.id);
+                let recipe = await recipeService.getRecipeById(findRecipe.id);
                 return resolve({
                     messageCode: 1,
                     message: 'update recipe success!',
