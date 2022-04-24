@@ -250,7 +250,7 @@ const recipeService = {
             try {
                 let userListRecipe = await db.Recipe.findAll({
                     where: {
-                        owner_id: req.body.user_id,
+                        owner_id: req.query.user_id,
                         is_allowed: 1
                     }
                 })
