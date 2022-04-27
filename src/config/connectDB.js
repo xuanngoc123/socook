@@ -5,7 +5,6 @@ const { Sequelize } = require('sequelize');
 const sequelize = new Sequelize('recipedb', 'root', process.env.MYSQL_PASS, {
     host: process.env.MYSQL_HOST,
     dialect: 'mysql',
-    // timezone: 'utc'
 });
 
 let connectDB = async () => {

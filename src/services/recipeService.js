@@ -839,6 +839,18 @@ const recipeService = {
                     `SELECT recipe.* FROM recipe JOIN collection_has_recipe ON recipe.id = collection_has_recipe.recipe_id WHERE collection_has_recipe.collection_id = ${req.query.id};`
                 );
                 recipeService.getUrlImageOfArrRecipe(listRecipe);
+                // if (listRecipe.length != 0) {
+                //     const owner_id = await db.Login_info.findOne({
+                //         where: { user_id: listRecipe.owner_id }
+                //     })
+                //     listRecipe.user_name = owner_id.user_name;
+                // }
+                for (let i = 0; i < listRecipe.length; i++) {
+                    const owner_id = await db.Login_info.findOne({
+                        where: { user_id: listRecipe[i].owner_id }
+                    })
+                    listRecipe[i].user_name = owner_id.user_name;
+                }
                 return resolve({
                     messageCode: 1,
                     message: 'get recipe of collection success!',
@@ -850,6 +862,15 @@ const recipeService = {
                     messageCode: 0,
                     message: 'get recipe of collection fail!',
                 })
+            }
+        })
+    },
+    resolveGetRecipeCategory: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                console.log(req.query.category);
+            } catch (error) {
+                reject(error)
             }
         })
     },
