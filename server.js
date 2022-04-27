@@ -26,7 +26,7 @@ app.use(express.json())
 
 app.use(passport.initialize());
 
-// connectDB();
+connectDB();
 
 const authRouter = require('./src/routes/auth')
 const userRouter = require('./src/routes/user')

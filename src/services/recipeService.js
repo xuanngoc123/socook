@@ -868,7 +868,12 @@ const recipeService = {
     resolveGetRecipeCategory: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
-                console.log(req.query.category);
+                let listCategory = req.query.category;
+                if (typeof listCategory == 'string') {
+                    let listRecipe = db.Recipe.findAll({
+                        where: {}
+                    })
+                }
             } catch (error) {
                 reject(error)
             }
