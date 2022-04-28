@@ -14,7 +14,6 @@ const fs = require('fs');
 // let server = http.createServer(app)
 // app.use(express.static('/public'));
 
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(upload.array());
