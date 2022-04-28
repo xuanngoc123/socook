@@ -21,7 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(express.static(path.join(__dirname, "public")));
 
 app.use(cors({
-    origin: process.env.BASE_URL_FRONTEND,
+    origin: [process.env.BASE_URL_FRONTEND,],
     methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
 
