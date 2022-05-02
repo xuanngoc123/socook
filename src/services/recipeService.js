@@ -146,7 +146,25 @@ const recipeService = {
                     const [category, ctgr_metadata] = await db.sequelize.query(
                         `SELECT category.id, category.name FROM category JOIN category_has_recipe on category.id = category_has_recipe.category_id WHERE category_has_recipe.recipe_id = ${id};`
                     );
+                    if (req.result.user == null || req.result.user == undefined) {
+                        var liked = null;
+                        var checkCollection = null;
+                    } else {
+                        var checkLike = await db.Like.findOne({
+                            where: {
+                                recipe_id: id,
+                                user_id: req.result.user.user_id
+                            }
+                        })
+                        var liked = 0
+                        if (checkLike) {
+                            liked = 1;
+                        }
 
+                        var [checkCollection, cclt_metadata] = await db.sequelize.query(
+                            `SELECT collection.id, collection.name FROM collection WHERE collection.user_id = ${req.result.user.user_id} AND collection.id in (SELECT collection_has_recipe.collection_id FROM collection_has_recipe WHERE collection_has_recipe.recipe_id = ${id});`
+                        );
+                    }
 
 
                     await transaction.commit();
@@ -157,6 +175,8 @@ const recipeService = {
                         likes,
                         category,
                         ingredient,
+                        liked,
+                        collections: checkCollection
                     }
 
                     return resolve({

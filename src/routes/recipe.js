@@ -5,7 +5,7 @@ const { upload } = require('../config/multer');
 const { validateRecipe } = require('../middlewares/recipeValidate');
 let router = express.Router();
 
-router.get('/get-recipe', recipeController.getRecipe)
+router.get('/get-recipe', authMiddleware.checkToken, recipeController.getRecipe)
 
 router.get('/comment-of-recipe', recipeController.getCommentOfRecipe)
 
