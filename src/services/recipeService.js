@@ -495,11 +495,17 @@ const recipeService = {
                 let findRecipe = await db.Recipe.findOne({
                     where: { id: req.body.recipe_id }
                 })
-                let findLoginInfo = await db.Login_info.findOne({
-                    where: { user_id: req.user.user_id },
-                    raw: true
-                })
-                if (findRecipe.owner_id != req.user.user_id && findLoginInfo.role != 'admin') {
+                if (!findRecipe) {
+                    return resolve({
+                        messageCode: 3,
+                        message: 'recipe not found!'
+                    })
+                }
+                // let findLoginInfo = await db.Login_info.findOne({
+                //     where: { user_id: req.user.user_id },
+                //     raw: true
+                // })
+                if (req.user.role != 'admin' && findRecipe.owner_id != req.user.user_id) {
                     return resolve({
                         messageCode: 2,
                         message: 'you are not allowed!'
@@ -754,7 +760,13 @@ const recipeService = {
                 let findRecipe = await db.Recipe.findOne({
                     where: { id: id }
                 })
-                if (findRecipe.owner_id != req.user.user_id) {
+                if (!findRecipe) {
+                    return resolve({
+                        messageCode: 3,
+                        message: 'recipe not found!'
+                    })
+                }
+                if (findRecipe.owner_id != req.user.user_id && req.user.role != 'admin') {
                     return resolve({
                         messageCode: 2,
                         message: 'you are not allowed!'
