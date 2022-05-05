@@ -11,6 +11,12 @@ const interacService = {
                 let findRecipe = await db.Recipe.findOne({
                     where: { id: recipe_id }
                 })
+                if (!findRecipe) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'recipe not found!'
+                    })
+                }
                 let createComment = await db.Comment.create({
                     id: count + 1,
                     user_id: user_id,
@@ -36,6 +42,7 @@ const interacService = {
                     await db.Notification.create({
                         type: 'comment',
                         receive_user_id: findRecipe.owner_id,
+                        recipe_id: findRecipe.id,
                         create_user_id: req.user.user_id,
                         create_time: Date.now(),
                         is_viewed: 0
@@ -308,6 +315,7 @@ const interacService = {
                             await db.Notification.create({
                                 type: 'like',
                                 receive_user_id: findRecipe.owner_id,
+                                recipe_id: findRecipe.id,
                                 create_user_id: req.user.user_id,
                                 create_time: Date.now(),
                                 is_viewed: 0

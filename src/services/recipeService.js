@@ -82,6 +82,7 @@ const recipeService = {
 
                 let recipe = await db.Recipe.findOne({
                     where: { id: id },
+                    raw: true
                 })
                 if (!recipe) {
                     return resolve({
@@ -117,7 +118,10 @@ const recipeService = {
                     }
 
                     if (recipe.main_image_url) recipe.main_image_url = getUrlImage(recipe.main_image_url);
-
+                    let user = await db.Login_info.findOne({
+                        where: { user_id: recipe.owner_id }
+                    })
+                    recipe.user_name = user.user_name;
                     let step = await db.Step.findAll({
                         where: { recipe_id: recipe.id },
                         raw: true
@@ -813,6 +817,12 @@ const recipeService = {
                 let recipe = await db.Recipe.findOne({
                     where: { id: req.body.recipe_id },
                 })
+                if (!recipe) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'recipe not found!'
+                    })
+                }
                 recipe.is_allowed = 1
                 await recipe.save({ transaction });
                 await transaction.commit()
@@ -897,17 +907,31 @@ const recipeService = {
             }
         })
     },
-    resolveGetRecipeCategory: async (req) => {
+    resolveGetRecipeIngerdient: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let listCategory = req.query.category;
-                if (typeof listCategory == 'string') {
-                    let listRecipe = db.Recipe.findAll({
-                        where: {}
+                let ingerdient = req.query.ingerdient;
+                const [listRecipe, lrc_metadata] = await db.sequelize.query(
+                    `SELECT * FROM recipe WHERE recipe.id in (SELECT recipe_has_ingredient.recipe_id FROM recipe_has_ingredient WHERE recipe_has_ingredient.ingredient_id IN (SELECT ingredient.id FROM ingredient WHERE ingredient.name = ' ${ingerdient}')) order by recipe.create_time DESC;`
+                );
+                for (let i = 0; i < listRecipe.length; i++) {
+                    const owner_id = await db.Login_info.findOne({
+                        where: { user_id: listRecipe[i].owner_id }
                     })
+                    listRecipe[i].user_name = owner_id.user_name;
                 }
+                return resolve({
+                    messageCode: 1,
+                    message: 'get recipe of category success!',
+                    data: listRecipe
+                })
+
             } catch (error) {
-                reject(error)
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get recipe of category fail!',
+                })
             }
         })
     },
