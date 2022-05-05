@@ -920,6 +920,7 @@ const recipeService = {
                     })
                     listRecipe[i].user_name = owner_id.user_name;
                 }
+                recipeService.getUrlImageOfArrRecipe(listRecipe);
                 return resolve({
                     messageCode: 1,
                     message: 'get recipe of category success!',
