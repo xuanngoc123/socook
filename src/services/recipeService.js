@@ -936,6 +936,34 @@ const recipeService = {
             }
         })
     },
+    resolveGetListRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let limit = req.query.limit;
+                const [listRecipe, lrc_metadata] = await db.sequelize.query(
+                    `select * from recipe order by recipe.create_time DESC limit ${limit};`
+                );
+                for (let i = 0; i < listRecipe.length; i++) {
+                    const owner_id = await db.Login_info.findOne({
+                        where: { user_id: listRecipe[i].owner_id }
+                    })
+                    listRecipe[i].user_name = owner_id.user_name;
+                }
+                recipeService.getUrlImageOfArrRecipe(listRecipe);
+                return resolve({
+                    messageCode: 1,
+                    message: 'get list recipe success!',
+                    data: listRecipe
+                })
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get list recipe fail!'
+                })
+            }
+        })
+    },
 }
 
 module.exports = recipeService;

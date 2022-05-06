@@ -28,4 +28,7 @@ router.put('/allowed-recipe', authMiddleware.veryfiTokenForAdmin, recipeControll
 router.get('/recipe-of-collection', recipeController.getRecipeOfCollection)
 
 router.get('/recipe-ingerdient', recipeController.getRecipeIngerdient)
+
+router.get('/list-recipe', recipeController.getListRecipe)
+
 module.exports = router;
