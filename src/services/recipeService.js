@@ -81,8 +81,7 @@ const recipeService = {
             try {
 
                 let recipe = await db.Recipe.findOne({
-                    where: { id: id },
-                    raw: true
+                    where: { id: id }
                 })
                 if (!recipe) {
                     return resolve({
@@ -117,11 +116,16 @@ const recipeService = {
                         }
                     }
 
-                    if (recipe.main_image_url) recipe.main_image_url = getUrlImage(recipe.main_image_url);
+                    let recipeOutput = await db.Recipe.findOne({
+                        where: { id: recipe.id },
+                        raw: true
+                    })
+
+                    if (recipeOutput.main_image_url) recipeOutput.main_image_url = getUrlImage(recipeOutput.main_image_url);
                     let user = await db.Login_info.findOne({
                         where: { user_id: recipe.owner_id }
                     })
-                    recipe.user_name = user.user_name;
+                    recipeOutput.user_name = user.user_name;
                     let step = await db.Step.findAll({
                         where: { recipe_id: recipe.id },
                         raw: true
@@ -174,7 +178,7 @@ const recipeService = {
                     await transaction.commit();
 
                     let data = {
-                        recipe,
+                        recipe: recipeOutput,
                         step,
                         likes,
                         category,
