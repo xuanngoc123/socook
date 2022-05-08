@@ -348,7 +348,7 @@ const interacService = {
             try {
                 let findRecipe = await db.Recipe.findOne({
                     where: {
-                        id: req.query.recipe_id
+                        id: req.body.recipe_id
                     }
                 })
                 if (!findRecipe) {
@@ -360,14 +360,14 @@ const interacService = {
                     let find = await db.Like.findOne({
                         where: {
                             user_id: req.user.user_id,
-                            recipe_id: req.query.recipe_id
+                            recipe_id: req.body.recipe_id
                         }
                     })
                     if (find) {
                         let destroyLike = await db.Like.destroy({
                             where: {
                                 user_id: req.user.user_id,
-                                recipe_id: req.query.recipe_id
+                                recipe_id: req.body.recipe_id
                             }
 
                         })
@@ -474,7 +474,7 @@ const interacService = {
             try {
                 let findFollow = await db.Follow.findOne({
                     where: {
-                        followed_user_id: req.query.followed_user_id,
+                        followed_user_id: req.body.followed_user_id,
                         follow_user_id: req.user.user_id,
                     }
                 })
@@ -486,7 +486,7 @@ const interacService = {
                 } else {
                     let destroyFollow = await db.Follow.destroy({
                         where: {
-                            followed_user_id: req.query.followed_user_id,
+                            followed_user_id: req.body.followed_user_id,
                             follow_user_id: req.user.user_id,
                         }
 
