@@ -86,10 +86,23 @@ const userService = {
     resolveGetUserInfo: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let user = await db.User.findOne({
-                    where: { user_id: req.query.user_id },
-                    raw: true,
-                })
+                if (req.query.user_name) {
+                    var userLogin = await db.Login_info.findOne({
+                        where: { user_name: req.query.user_name },
+                        raw: true,
+                    })
+                    if (userLogin) {
+                        var user = await db.User.findOne({
+                            where: { user_id: userLogin.user_id },
+                            raw: true,
+                        })
+                    }
+                } else if (req.query.user_id) {
+                    var user = await db.User.findOne({
+                        where: { user_id: req.query.user_id },
+                        raw: true,
+                    })
+                }
                 if (!user) {
                     return resolve({
                         messageCode: 2,
