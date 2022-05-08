@@ -118,5 +118,13 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    checkLike: async (req, res) => {
+        try {
+            let data = await recipeService.resolveCheckLike(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 module.exports = recipeController

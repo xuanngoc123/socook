@@ -7,6 +7,8 @@ let router = express.Router();
 
 router.get('/get-recipe', authMiddleware.checkToken, recipeController.getRecipe)
 
+router.get('/check-like', authMiddleware.veryfiToken, recipeController.checkLike)
+
 router.get('/comment-of-recipe', recipeController.getCommentOfRecipe)
 
 router.get('/get-category', recipeController.getCategory)

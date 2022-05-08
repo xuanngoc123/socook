@@ -968,6 +968,34 @@ const recipeService = {
             }
         })
     },
+    resolveCheckLike: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                var checkLike = await db.Like.findOne({
+                    where: {
+                        recipe_id: req.query.recipe_id,
+                        user_id: req.user.user_id
+                    }
+                })
+                like = 0;
+                if (checkLike) {
+                    like = 1
+                }
+                return resolve({
+                    messageCode: 1,
+                    message: 'check like success!',
+                    like
+                })
+
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'check like fail!',
+                })
+            }
+        })
+    },
 }
 
 module.exports = recipeService;
