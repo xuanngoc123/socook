@@ -276,12 +276,28 @@ const recipeService = {
     resolveGetUserListRecipe: async (req) => {
         return new Promise(async (resolve, reject) => {
             try {
-                let userListRecipe = await db.Recipe.findAll({
-                    where: {
-                        owner_id: req.query.user_id,
-                        is_allowed: 1
+                if (req.query.user_name) {
+                    var userLogin = await db.Login_info.findOne({
+                        where: { user_name: req.query.user_name },
+                        raw: true,
+                    })
+                    if (userLogin) {
+                        var userListRecipe = await db.Recipe.findAll({
+                            where: {
+                                owner_id: userLogin.user_id,
+                                is_allowed: 1
+                            }
+                        })
                     }
-                })
+                } else if (req.query.user_id) {
+                    var userListRecipe = await db.Recipe.findAll({
+                        where: {
+                            owner_id: req.query.user_id,
+                            is_allowed: 1
+                        }
+                    })
+                }
+
                 if (!userListRecipe) {
                     return resolve({
                         messageCode: 2,

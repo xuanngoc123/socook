@@ -48,13 +48,9 @@ app.post('/arrimg', upload.any(), (req, res) => {
     console.log(req.files);
 })
 
-// app.get('/image/:key', (req, res) => {
-//     const key = req.params.key;
-//     const url = getFileStream(key);
-
-//     console.log(url);
-//     res.send("Bấm vào link làm gì ^.^");
-// })
+app.get('/', (req, res) => {
+    res.send("check host");
+})
 
 app.listen(host, () => {
     console.log(`App listen on port ${host}`);
