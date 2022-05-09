@@ -2,6 +2,13 @@ const { getUrlImage } = require('../config/multer')
 const db = require('../models/index')
 
 const userService = {
+    getNumberOfFollow: async (user_id) => {
+        const [countFollow] = await db.sequelize.query(
+            `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user_id} GROUP by followed_user_id`
+        )
+        console.log(countFollow[0].number_of_followers);
+        return countFollow[0].number_of_followers;
+    },
     resolveGetMyInfo: async (data) => {
         return new Promise(async (resolve, reject) => {
             try {
@@ -20,6 +27,10 @@ const userService = {
                 user.cover_image = getUrlImage(user.cover_image);
                 user.email = userLoginInfo.email;
                 user.user_name = userLoginInfo.user_name;
+                const [countFollow] = await db.sequelize.query(
+                    `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`
+                )
+                user.countFollow = countFollow[0].number_of_followers
                 return resolve({
                     messageCode: 1,
                     message: 'get my info success!',
@@ -121,6 +132,10 @@ const userService = {
 
                 user.email = userLoginInfo.email;
                 user.user_name = userLoginInfo.user_name;
+                const [countFollow] = await db.sequelize.query(
+                    `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`
+                )
+                user.countFollow = countFollow[0].number_of_followers
                 return resolve({
                     messageCode: 1,
                     message: 'get user info success!',
