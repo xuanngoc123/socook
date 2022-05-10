@@ -515,6 +515,14 @@ const interacService = {
                     where: { receive_user_id: req.user.user_id },
                     raw: true
                 })
+                if (getMyNotification) {
+                    for (let i = 0; i < getMyNotification.length; i++) {
+                        let findUserCreateNotifi = await db.Login_info.findOne({
+                            where: { user_id: getMyNotification[i].create_user_id }
+                        })
+                        getMyNotification[i].create_user_name = findUserCreateNotifi.user_name;
+                    }
+                }
                 return resolve({
                     messageCode: 1,
                     message: 'get notification success!',
