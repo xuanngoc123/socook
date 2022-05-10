@@ -845,6 +845,22 @@ const recipeService = {
                 }
                 recipe.is_allowed = 1
                 await recipe.save({ transaction });
+
+                let followUser = await db.Follow.findAll({
+                    where: { followed_user_id: recipe.owner_id }
+                })
+                if (followUser) {
+                    for (let i = 0; i < followUser.length; i++) {
+                        await db.Notification.create({
+                            type: 'đăng bài viết mới',
+                            receive_user_id: followUser[i].follow_user_id,
+                            recipe_id: recipe.id,
+                            create_user_id: recipe.owner_id,
+                            create_time: Date.now(),
+                            is_viewed: 0
+                        }, { transaction })
+                    }
+                }
                 await transaction.commit()
                 return resolve({
                     messageCode: 1,
@@ -885,7 +901,6 @@ const recipeService = {
             }
         })
     },
-
     getUrlImageOfArrRecipe: (listRecipe) => {
         if (!listRecipe) return listRecipe;
         let length = listRecipe.length;
