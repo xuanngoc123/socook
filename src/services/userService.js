@@ -30,7 +30,11 @@ const userService = {
                 const [countFollow] = await db.sequelize.query(
                     `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`
                 )
-                user.countFollow = countFollow[0].number_of_followers
+                if (countFollow.length != 0) {
+                    user.countFollow = countFollow[0].number_of_followers
+                } else {
+                    user.countFollow = 0;
+                }
                 return resolve({
                     messageCode: 1,
                     message: 'get my info success!',
@@ -120,6 +124,23 @@ const userService = {
                         message: 'user not found!'
                     })
                 }
+
+                if (req.result.user == null || req.result.user == undefined) {
+                    var followed = null;
+
+                } else {
+                    let checkFollow = await db.Follow.findOne({
+                        where: {
+                            followed_user_id: user.user_id,
+                            follow_user_id: req.result.user.user_id
+                        }
+                    })
+                    followed = 0
+                    if (checkFollow) {
+                        followed = 1
+                    }
+                }
+
                 let userLoginInfo = await db.Login_info.findOne({
                     where: {
                         user_id: user.user_id
@@ -130,12 +151,19 @@ const userService = {
                 user.avatar_image = getUrlImage(user.avatar_image);
                 user.cover_image = getUrlImage(user.cover_image);
 
+                user.followed = followed
                 user.email = userLoginInfo.email;
                 user.user_name = userLoginInfo.user_name;
+
                 const [countFollow] = await db.sequelize.query(
                     `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`
                 )
-                user.countFollow = countFollow[0].number_of_followers
+                if (countFollow.length != 0) {
+                    user.countFollow = countFollow[0].number_of_followers
+                } else {
+                    user.countFollow = 0;
+                }
+
                 return resolve({
                     messageCode: 1,
                     message: 'get user info success!',
