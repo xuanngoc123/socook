@@ -7,23 +7,23 @@ let router = express.Router();
 
 router.get('/get-recipe', authMiddleware.checkToken, recipeController.getRecipe)
 
-router.get('/check-like', authMiddleware.veryfiToken, recipeController.checkLike)
+router.get('/check-like', authMiddleware.veryfiTokenActive, recipeController.checkLike)
 
 router.get('/comment-of-recipe', recipeController.getCommentOfRecipe)
 
 router.get('/get-category', recipeController.getCategory)
 
-router.get('/my-list-recipe', authMiddleware.veryfiToken, recipeController.getMyListRecipe)
+router.get('/my-list-recipe', authMiddleware.veryfiTokenActive, recipeController.getMyListRecipe)
 
 router.get('/user-list-recipe', recipeController.getUserListRecipe)
 
-router.post('/create-recipe', authMiddleware.veryfiToken, upload.any(), recipeController.createRecipe)
+router.post('/create-recipe', authMiddleware.veryfiTokenActive, upload.any(), recipeController.createRecipe)
 
-router.get('/wait-recipe', authMiddleware.veryfiToken, recipeController.getWaitRecipe)
+router.get('/wait-recipe', authMiddleware.veryfiTokenActive, recipeController.getWaitRecipe)
 
-router.put('/update-recipe', authMiddleware.veryfiToken, upload.any(), recipeController.updateRecipe)
+router.put('/update-recipe', authMiddleware.veryfiTokenActive, upload.any(), recipeController.updateRecipe)
 
-router.delete('/delete-recipe', authMiddleware.veryfiToken, recipeController.deleteRecipe)
+router.delete('/delete-recipe', authMiddleware.veryfiTokenActive, recipeController.deleteRecipe)
 
 router.put('/allowed-recipe', authMiddleware.veryfiTokenForAdmin, recipeController.allowedRecipe)
 

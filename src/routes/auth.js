@@ -47,7 +47,7 @@ router.get('/facebook/callback', passport.authenticate('facebook'), (req, res) =
 });
 
 //change password
-router.put('/changepassword', authMiddleware.veryfiToken, validateAuth.validateChangePassword(), authController.changePassword)
+router.put('/changepassword', authMiddleware.veryfiTokenActive, validateAuth.validateChangePassword(), authController.changePassword)
 
 
 //fogot password
