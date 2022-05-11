@@ -24,6 +24,8 @@ const authService = {
                     let salt = await bcrypt.genSalt(10);
                     let password = await bcrypt.hash(data.body.password, salt);
                     let createUser = await db.User.create({
+                        avatar_image: process.env.AVATAR_KEY,
+                        cover_image: process.env.COVER_KEY,
                         create_time: Date.now(),
                     }, { transaction })
 
