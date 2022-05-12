@@ -33,4 +33,8 @@ router.get('/recipe-ingerdient', recipeController.getRecipeIngerdient)
 
 router.get('/list-recipe', recipeController.getListRecipe)
 
+router.get('/top-recipe', recipeController.getTopRecipe)
+
+router.get('/top-collection', recipeController.getTopCollection)
+
 module.exports = router;

@@ -42,20 +42,6 @@ const authService = {
                     let refreshToken = authService.generateRefreshToken(createLoginInfo, createUser)
                     let accessTokenForActive = authService.generateTokenForActive(createLoginInfo);
 
-                    // let transporter = nodemailer.createTransport({
-                    // service: "Gmail",
-                    // auth: {
-                    //     user: process.env.EMAIL_USER,
-                    //     pass: process.env.EMAIL_PASSWORD
-                    // }
-                    // });
-                    // let info = await transporter.sendMail({
-                    //     from: '"Cook Social"<admin>', // sender address
-                    //     to: `${createLoginInfo.email}`, // list of receivers
-                    //     subject: "Active Account", // Subject line
-                    //     // text: "Click link to verify account: ", // plain text body
-                    //     html: `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>` // html body
-                    // })
                     const content = `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>`
                     await sendMail(createLoginInfo.email, content)
                         .then(async () => {

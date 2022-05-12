@@ -126,5 +126,21 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    getTopRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetTopRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    getTopCollection: async (req, res) => {
+        try {
+            let data = await recipeService.resolveGetTopCollection(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 module.exports = recipeController

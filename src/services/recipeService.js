@@ -1027,6 +1027,56 @@ const recipeService = {
             }
         })
     },
+    resolveGetTopRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let limit = req.query.limit;
+                if (!limit) {
+                    limit = 5;
+                }
+                const [listRecipe, lrc_metadata] = await db.sequelize.query(
+                    `select * from recipe order by recipe.total_views DESC limit ${limit};`
+                );
+                recipeService.getUrlImageOfArrRecipe(listRecipe);
+                return resolve({
+                    messageCode: 1,
+                    message: 'get list recipe success!',
+                    data: listRecipe
+                })
+
+
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get list recipe fail!'
+                })
+            }
+        })
+    },
+    resolveGetTopCollection: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let limit = req.query.limit;
+                if (!limit) {
+                    limit = 5;
+                }
+                const [listCollection, lcl_metadata] = await db.sequelize.query(
+                    `SELECT *, COUNT(user_save_collection.user_id) AS userSaves FROM collection LEFT JOIN user_save_collection on user_save_collection.collection_id = collection.id GROUP BY user_save_collection.collection_id ORDER BY userSaves DESC LIMIT ${limit};`
+                );
+                return resolve({
+                    messageCode: 1,
+                    message: 'get list collection success!',
+                    data: listCollection
+                })
+            } catch (error) {
+                reject({
+                    messageCode: 1,
+                    message: 'get list collection fail!',
+                })
+            }
+        })
+    },
 }
 
 module.exports = recipeService;

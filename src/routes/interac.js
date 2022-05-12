@@ -28,6 +28,6 @@ router.post('/follow', authMiddleware.veryfiTokenActive, interacController.follo
 
 router.delete('/unfollow', authMiddleware.veryfiTokenActive, interacController.unfollowUser)
 
-router.get('/notification', authMiddleware.veryfiToken, interacController.getNotification)
+router.get('/notification', authMiddleware.veryfiTokenActive, interacController.getNotification)
 
 module.exports = router;
