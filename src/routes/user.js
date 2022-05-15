@@ -22,4 +22,6 @@ router.post('/coverimage', authMiddleware.veryfiTokenActive, upload.single('imag
 //get top đầu bếp
 router.get('/topuser', userController.getTopUser);
 
+router.get('/topuser-recipe', userController.getTopUserRecipe);
+
 module.exports = router;

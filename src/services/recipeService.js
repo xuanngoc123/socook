@@ -89,13 +89,14 @@ const recipeService = {
                         message: 'recipe not found!'
                     })
                 } else {
-                    let ip = requestIp.getClientIp(req);
+                    let ip = req.socket.remoteAddress;
                     let findIp = await db.Ip_view.findOne({
                         where: {
                             ip_address: ip,
                             recipe_id: id
                         }
                     })
+                    console.log(findIp);
                     if (!findIp) {
                         let createIp = await db.Ip_view.create({
                             ip_address: ip,
@@ -1037,6 +1038,12 @@ const recipeService = {
                 const [listRecipe, lrc_metadata] = await db.sequelize.query(
                     `select * from recipe order by recipe.total_views DESC limit ${limit};`
                 );
+                for (let i = 0; i < listRecipe.length; i++) {
+                    const owner_id = await db.Login_info.findOne({
+                        where: { user_id: listRecipe[i].owner_id }
+                    })
+                    listRecipe[i].user_name = owner_id.user_name;
+                }
                 recipeService.getUrlImageOfArrRecipe(listRecipe);
                 return resolve({
                     messageCode: 1,

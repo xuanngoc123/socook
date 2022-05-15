@@ -5,7 +5,6 @@ var multerS3 = require('multer-s3')
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
-
 const bucketName = process.env.AWS_BUCKET_NAME;
 const region = process.env.AWS_BUCKET_REGION;
 const accessKeyId = process.env.AWS_ACCESS_KEY;
@@ -15,19 +14,6 @@ const s3 = new S3({
     accessKeyId,
     secretAccessKey
 })
-
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         cb(null, "./public/uploads")
-//     },
-
-//     filename: (req, file, cb) => {
-//         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-//     }
-// });
-
-// var upload = multer({ storage: storage });
-
 var upload = multer({
     storage: multerS3({
         s3: s3,
@@ -43,8 +29,6 @@ var upload = multer({
         if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg" || file.mimetype == "image/svg") {
             cb(null, true);
         } else {
-            // cb(null, false)
-            // return cb(new Error('Only .png, .jpg, .jpeg and .svg format allowed'))
             req.fileValidationError = "Only .png, .jpg, .jpeg and .svg format allowed";
             return cb(null, false, req.fileValidationError);
         }

@@ -315,6 +315,31 @@ const userService = {
             }
         })
     },
+    resolveGetTopUserRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let limit = req.query.limit;
+                if (!req.query.limit) {
+                    limit = 5;
+                }
+                const [countRecipe] = await db.sequelize.query(
+                    `SELECT login_info.user_id, login_info.user_name, t1.numberOfRecipes, t1.numberOfViews FROM login_info JOIN (SELECT recipe.owner_id AS id, COUNT(recipe.id) AS numberOfRecipes, SUM(recipe.total_views) AS numberOfViews FROM recipe GROUP BY recipe.owner_id ORDER BY numberOfRecipes DESC LIMIT ${limit}) t1 ON login_info.user_id = t1.id;`
+                )
+
+                return resolve({
+                    messageCode: 1,
+                    message: 'get top user success!',
+                    data: countRecipe
+                })
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get top user fail!'
+                })
+            }
+        })
+    },
 }
 
 module.exports = userService
