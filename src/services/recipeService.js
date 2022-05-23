@@ -204,7 +204,7 @@ const recipeService = {
             }
         })
     },
-    resolveGetCommentOfRecipe: async (id) => {
+    resolveGetCommentOfRecipe: async (id, req = null) => {
         return new Promise(async (resolve, reject) => {
             try {
                 let comment = await db.Comment.findAll({
@@ -243,12 +243,28 @@ const recipeService = {
                         let [user_info] = await db.sequelize.query(
                             `SELECT login_info.user_name as user_name, user.avatar_image as avatar_image FROM login_info JOIN user ON login_info.user_id = user.user_id WHERE user.user_id = ${comment[i].user_id};`
                         );
-
+                        if (req.result.user == null || req.result.user == undefined) {
+                            var liked = null;
+                        } else {
+                            var checkLike = await db.User_like_comment.findOne({
+                                where: {
+                                    comment_id: comment[i].id,
+                                    user_id: req.result.user.user_id
+                                }
+                            })
+                            var liked = 0
+                            if (checkLike) {
+                                liked = 1;
+                            }
+                        }
                         comment[i].avatar_image = getUrlImage(user_info[0].avatar_image);
                         comment[i].user_name = user_info[0].user_name;
                         comment[i].image_url_list = listImgaeComment;
                         comment[i].like = likeComment;
+                        comment[i].liked = liked;
                         comment[i].childComment = childComment;
+
+
                     }
                 }
                 return resolve({

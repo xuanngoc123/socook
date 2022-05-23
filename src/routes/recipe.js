@@ -9,7 +9,7 @@ router.get('/get-recipe', authMiddleware.checkToken, recipeController.getRecipe)
 
 router.get('/check-like', authMiddleware.veryfiTokenActive, recipeController.checkLike)
 
-router.get('/comment-of-recipe', recipeController.getCommentOfRecipe)
+router.get('/comment-of-recipe', authMiddleware.checkToken, recipeController.getCommentOfRecipe)
 
 router.get('/get-category', recipeController.getCategory)
 

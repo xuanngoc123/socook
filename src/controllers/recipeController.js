@@ -13,7 +13,7 @@ const recipeController = {
     },
     getCommentOfRecipe: async (req, res) => {
         try {
-            let data = await recipeService.resolveGetCommentOfRecipe(req.query.id);
+            let data = await recipeService.resolveGetCommentOfRecipe(req.query.id, req);
             return res.status(200).json(data);
         } catch (error) {
             return res.status(500).json(error)
