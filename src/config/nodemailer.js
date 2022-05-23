@@ -11,7 +11,7 @@ const REFRESH_TOKEN = process.env.REFRESH_TOKEN
 const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL);
 oAuth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-async function sendMail(email, content) {
+async function sendMail(email, content, subject) {
     try {
         const accessToken = await oAuth2Client.getAccessToken();
         const transporter = nodemailer.createTransport({
@@ -26,9 +26,9 @@ async function sendMail(email, content) {
             }
         });
         let result = await transporter.sendMail({
-            from: '"Cook Social"<admin>', // sender address
+            from: '"Socook"<admin>', // sender address
             to: email, // list of receivers
-            subject: "Active Account", // Subject line
+            subject: subject, // Subject line
             // text: "Click link to verify account: ", // plain text body
             html: content // html body
         })

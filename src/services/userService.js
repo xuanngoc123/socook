@@ -323,9 +323,11 @@ const userService = {
                     limit = 5;
                 }
                 const [countRecipe] = await db.sequelize.query(
-                    `SELECT login_info.user_id, login_info.user_name, t1.numberOfRecipes, t1.numberOfViews FROM login_info JOIN (SELECT recipe.owner_id AS id, COUNT(recipe.id) AS numberOfRecipes, SUM(recipe.total_views) AS numberOfViews FROM recipe GROUP BY recipe.owner_id ORDER BY numberOfRecipes DESC LIMIT ${limit}) t1 ON login_info.user_id = t1.id;`
+                    `SELECT login_info.user_id, login_info.user_name, user.avatar_image, t1.numberOfRecipes, t1.numberOfViews  FROM login_info JOIN (SELECT recipe.owner_id AS id, COUNT(recipe.id) AS numberOfRecipes, SUM(recipe.total_views) AS numberOfViews FROM recipe WHERE recipe.is_allowed=1 GROUP BY recipe.owner_id ORDER BY numberOfRecipes DESC LIMIT ${limit}) t1 ON login_info.user_id = t1.id JOIN user ON user.user_id = t1.id;`
                 )
-
+                for (let i = 0; i < countRecipe.length; i++) {
+                    countRecipe[i].avatar_image = getUrlImage(countRecipe[i].avatar_image);
+                }
                 return resolve({
                     messageCode: 1,
                     message: 'get top user success!',

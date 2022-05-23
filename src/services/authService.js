@@ -24,6 +24,7 @@ const authService = {
                     let salt = await bcrypt.genSalt(10);
                     let password = await bcrypt.hash(data.body.password, salt);
                     let createUser = await db.User.create({
+                        full_name: 'Người dùng hệ thống',
                         avatar_image: process.env.AVATAR_KEY,
                         cover_image: process.env.COVER_KEY,
                         create_time: Date.now(),
@@ -43,7 +44,7 @@ const authService = {
                     let accessTokenForActive = authService.generateTokenForActive(createLoginInfo);
 
                     const content = `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>`
-                    await sendMail(createLoginInfo.email, content)
+                    await sendMail(createLoginInfo.email, content, "ACTIVE ACCOUNT")
                         .then(async () => {
                             await transaction.commit();
                             let findUser = await db.User.findOne({
@@ -269,7 +270,7 @@ const authService = {
                 } else {
                     let accessTokenForResetPassword = authService.generateTokenForResetPassword(data.body.email)
                     const content = `Click link to change new password:  <a href="${process.env.BASE_URL_FRONTEND}/rspassword?access=${accessTokenForResetPassword}">${process.env.BASE_URL_FRONTEND}/rspassword?access=${accessTokenForResetPassword}</a>`;
-                    await sendMail(user.email, content)
+                    await sendMail(user.email, content, "RESET PASSWORD")
                         .then(async () => {
                             return resolve({
                                 messageCode: 1,
@@ -412,7 +413,7 @@ const authService = {
                 let accessTokenForActive = authService.generateTokenForActive(req.user)
 
                 const content = `Click link to verify account:  <a href="${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}">${process.env.BASE_URL_FRONTEND}/verify?access=${accessTokenForActive}</a>`
-                await sendMail(req.user.email, content)
+                await sendMail(req.user.email, content, "ACTIVE ACCOUNT")
                     .then(async (result) => {
                         console.log(result);
                         return resolve({
