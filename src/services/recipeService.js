@@ -230,6 +230,22 @@ const recipeService = {
                             where: { parent_id: comment[i].id },
                             raw: true
                         })
+                        let childCommentLength = childComment.length;
+                        if (childCommentLength > 0) {
+                            for (let j = 0; j < childCommentLength; j++) {
+                                let [user_info] = await db.sequelize.query(
+                                    `SELECT login_info.user_name as user_name, user.avatar_image as avatar_image FROM login_info JOIN user ON login_info.user_id = user.user_id WHERE user.user_id = ${comment[i].user_id};`
+                                );
+                                childComment[j].user_name = user_info[0].user_name;
+                                childComment[j].avatar_image = getUrlImage(user_info[0].avatar_image);
+                            }
+                        }
+                        let [user_info] = await db.sequelize.query(
+                            `SELECT login_info.user_name as user_name, user.avatar_image as avatar_image FROM login_info JOIN user ON login_info.user_id = user.user_id WHERE user.user_id = ${comment[i].user_id};`
+                        );
+
+                        comment[i].avatar_image = getUrlImage(user_info[0].avatar_image);
+                        comment[i].user_name = user_info[0].user_name;
                         comment[i].image_url_list = listImgaeComment;
                         comment[i].like = likeComment;
                         comment[i].childComment = childComment;

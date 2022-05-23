@@ -537,6 +537,124 @@ const interacService = {
             }
         })
     },
+    resolveLikeComment: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let findComment = await db.Comment.findOne({
+                    where: {
+                        id: req.body.comment_id
+                    },
+                    raw: true
+                })
+                if (!findComment) {
+                    return resolve({
+                        messageCode: 3,
+                        message: 'comment not found!'
+                    })
+                } else {
+                    let userLikeComment = await db.User_like_comment.findOne({
+                        where: {
+                            user_id: req.user.user_id,
+                            comment_id: req.body.comment_id
+                        }
+                    })
+                    let findRecipe = await db.Recipe.findOne({
+                        where: {
+                            id: findComment.recipe_id
+                        }
+                    })
+                    if (userLikeComment) {
+                        return resolve({
+                            messageCode: 2,
+                            message: 'you were liked!'
+                        })
+                    } else {
+                        await db.User_like_comment.create({
+                            user_id: req.user.user_id,
+                            comment_id: req.body.comment_id
+                        }, { transaction })
+                        if (findComment.user_id != req.user.user_id) {
+                            await db.Notification.create({
+                                type: 'likeComment',
+                                receive_user_id: findComment.user_id,
+                                recipe_id: findRecipe.id,
+                                create_user_id: req.user.user_id,
+                                comment_id: findComment.id,
+                                create_time: Date.now(),
+                                is_viewed: 0
+                            }, { transaction })
+                        }
+                        await transaction.commit();
+                        return resolve({
+                            messageCode: 1,
+                            message: 'like success!'
+                        })
+                    }
+                }
+
+
+            } catch (error) {
+                console.log(error);
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'like fail!'
+                })
+            }
+        })
+    },
+    resolveDislikeComment: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let findComment = await db.Comment.findOne({
+                    where: {
+                        id: req.body.comment_id
+                    },
+                    raw: true
+                })
+                if (!findComment) {
+                    return resolve({
+                        messageCode: 3,
+                        message: 'comment not found!'
+                    })
+                } else {
+                    let userLikeComment = await db.User_like_comment.findOne({
+                        where: {
+                            user_id: req.user.user_id,
+                            comment_id: req.body.comment_id
+                        }
+                    })
+                    if (userLikeComment) {
+                        await db.User_like_comment.destroy({
+                            where: {
+                                user_id: req.user.user_id,
+                                comment_id: req.body.comment_id
+                            }
+                        }, { transaction })
+                        await transaction.commit();
+                        return resolve({
+                            messageCode: 1,
+                            message: 'dislike success!'
+                        })
+                    } else {
+                        return resolve({
+                            messageCode: 2,
+                            message: 'you have not liked!'
+                        })
+                    }
+                }
+            } catch (error) {
+                console.log(error)
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'dislike fail!'
+                })
+            }
+        })
+    },
 }
 
 module.exports = interacService

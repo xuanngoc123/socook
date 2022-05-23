@@ -123,6 +123,22 @@ const interacController = {
             return res.status(500).json(error)
         }
     },
+    likeComment: async (req, res) => {
+        try {
+            let data = await interacService.resolveLikeComment(req);
+            return res.status(200).json(data)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    dislikeComment: async (req, res) => {
+        try {
+            let data = await interacService.resolveDislikeComment(req);
+            return res.status(200).json(data)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 
 module.exports = interacController

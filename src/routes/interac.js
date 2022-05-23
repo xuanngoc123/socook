@@ -30,4 +30,7 @@ router.delete('/unfollow', authMiddleware.veryfiTokenActive, interacController.u
 
 router.get('/notification', authMiddleware.veryfiTokenActive, interacController.getNotification)
 
+router.post('/like-comment', authMiddleware.veryfiTokenActive, interacController.likeComment)
+
+router.delete('/dislike-comment', authMiddleware.veryfiTokenActive, interacController.dislikeComment)
 module.exports = router;
