@@ -83,10 +83,10 @@ const recipeService = {
                 let recipe = await db.Recipe.findOne({
                     where: { id: id }
                 })
-                if (!recipe || recipe.is_allowed != 1) {
+                if (!recipe) {
                     return resolve({
                         messageCode: 2,
-                        message: 'recipe invalid!'
+                        message: 'recipe not found!'
                     })
                 } else {
                     let ip = req.socket.remoteAddress;
@@ -187,12 +187,21 @@ const recipeService = {
                         liked,
                         collections: checkCollection
                     }
+                    if (req.result?.user?.role == 'admin' || (recipe.owner_id == req.result?.user?.user_id) || (recipe.is_allowed == 1)) {
+                        return resolve({
+                            messageCode: 1,
+                            message: 'get recipe success!',
+                            data
+                        })
+                    } else {
+                        return resolve({
+                            messageCode: 3,
+                            message: 'you are not allowed!'
+                        })
+                    }
 
-                    return resolve({
-                        messageCode: 1,
-                        message: 'get recipe success!',
-                        data
-                    })
+
+
                 }
             } catch (error) {
                 console.log(error);
@@ -581,6 +590,7 @@ const recipeService = {
 
                 findRecipe.last_update = Date.now()
                 findRecipe.update_by = req.user.user_id
+                findRecipe.is_allowed = 0
                 await findRecipe.save({ transaction });
 
                 let main_image_url = req.files.filter(x => x.fieldname == 'main_image_url');
