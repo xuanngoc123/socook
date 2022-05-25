@@ -142,5 +142,29 @@ const recipeController = {
             return res.status(500).json(error)
         }
     },
+    rejectRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveRejectRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    allRejectRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveAllRejectRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    myRejectRecipe: async (req, res) => {
+        try {
+            let data = await recipeService.resolveMyRejectRecipe(req);
+            return res.status(200).json(data);
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 module.exports = recipeController

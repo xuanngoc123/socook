@@ -27,7 +27,8 @@ module.exports = (sequelize, DataTypes) => {
         comment_id: DataTypes.INTEGER,
         create_user_id: DataTypes.TEXT,
         create_time: DataTypes.DATE,
-        is_viewed: DataTypes.INTEGER
+        is_viewed: DataTypes.INTEGER,
+        reason: DataTypes.TEXT,
     }, {
         sequelize,
         modelName: 'Notification',

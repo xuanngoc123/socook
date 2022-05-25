@@ -37,4 +37,9 @@ router.get('/top-recipe', recipeController.getTopRecipe)
 
 router.get('/top-collection', recipeController.getTopCollection)
 
+router.put('/reject-recipe', authMiddleware.veryfiTokenForAdmin, recipeController.rejectRecipe)
+
+router.get('/all-reject-recipe', authMiddleware.veryfiTokenForAdmin, recipeController.allRejectRecipe)
+
+router.get('/my-reject-recipe', authMiddleware.veryfiTokenActive, recipeController.myRejectRecipe)
 module.exports = router;

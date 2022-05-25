@@ -83,10 +83,10 @@ const recipeService = {
                 let recipe = await db.Recipe.findOne({
                     where: { id: id }
                 })
-                if (!recipe) {
+                if (!recipe || recipe.is_allowed != 1) {
                     return resolve({
                         messageCode: 2,
-                        message: 'recipe not found!'
+                        message: 'recipe invalid!'
                     })
                 } else {
                     let ip = req.socket.remoteAddress;
@@ -550,12 +550,18 @@ const recipeService = {
             try {
                 // UPDATE TABLE RECIPE
                 let findRecipe = await db.Recipe.findOne({
-                    where: { id: req.body.recipe_id }
+                    where: {
+                        id: req.body.recipe_id,
+
+                        is_allowed: [0, 2]
+
+
+                    }
                 })
                 if (!findRecipe) {
                     return resolve({
                         messageCode: 3,
-                        message: 'recipe not found!'
+                        message: 'recipe invalid!'
                     })
                 }
                 // let findLoginInfo = await db.Login_info.findOne({
@@ -1112,6 +1118,122 @@ const recipeService = {
                 reject({
                     messageCode: 1,
                     message: 'get list collection fail!',
+                })
+            }
+        })
+    },
+    resolveRejectRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const transaction = await db.sequelize.transaction();
+            try {
+                let queueRecipe = await db.Recipe.findOne({
+                    where: {
+                        id: req.body.recipe_id,
+                        is_allowed: 0
+                    }
+                })
+                if (!queueRecipe) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'recipe invalid!',
+                    })
+                } else {
+                    queueRecipe.is_allowed = 2;
+                    await queueRecipe.save({ transaction });
+                    await db.Notification.create({
+                        type: 'từ chối bài viết',
+                        receive_user_id: queueRecipe.owner_id,
+                        recipe_id: queueRecipe.id,
+                        create_user_id: req.user.user_id,
+                        create_time: Date.now(),
+                        is_viewed: 0,
+                        reason: req.body.reason
+                    }, { transaction })
+                    await transaction.commit();
+                    return resolve({
+                        messageCode: 1,
+                        message: 'reject recipe success!',
+                    })
+                }
+            } catch (error) {
+                console.log(error)
+                await transaction.rollback();
+                reject({
+                    messageCode: 0,
+                    message: 'reject recipe fail!',
+                })
+            }
+        })
+    },
+    resolveAllRejectRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let allRejectRecipe = await db.Recipe.findAll({
+                    where: {
+                        is_allowed: 2
+                    },
+                    raw: true
+                })
+                let lengthOfAllRejectRecipe = allRejectRecipe.length;
+                for (let i = 0; i < lengthOfAllRejectRecipe; i++) {
+                    let [findReason] = await db.sequelize.query(
+                        `SELECT * FROM notification WHERE type = 'từ chối bài viết' AND recipe_id = ${allRejectRecipe[i].id}  ORDER BY notification.create_time DESC LIMIT 1`
+                    )
+                    const owner_id = await db.Login_info.findOne({
+                        where: { user_id: allRejectRecipe[i].owner_id }
+                    })
+                    allRejectRecipe[i].reason = findReason[0].reason
+                    allRejectRecipe[i].user_name = owner_id.user_name;
+                }
+
+                recipeService.getUrlImageOfArrRecipe(allRejectRecipe);
+
+                return resolve({
+                    messageCode: 1,
+                    message: 'get all reject recipe success!',
+                    data: allRejectRecipe
+                })
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get all reject recipe fail!',
+                })
+            }
+        })
+    },
+    resolveMyRejectRecipe: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let myRejectRecipe = await db.Recipe.findAll({
+                    where: {
+                        owner_id: req.user.user_id,
+                        is_allowed: 2
+                    },
+                    raw: true
+                })
+                let lengthOfMyRejectRecipe = myRejectRecipe.length;
+                for (let i = 0; i < lengthOfMyRejectRecipe; i++) {
+                    let [findReason] = await db.sequelize.query(
+                        `SELECT * FROM notification WHERE type = 'từ chối bài viết' AND recipe_id = ${myRejectRecipe[i].id}  ORDER BY notification.create_time DESC LIMIT 1`
+                    )
+                    const owner_id = await db.Login_info.findOne({
+                        where: { user_id: myRejectRecipe[i].owner_id }
+                    })
+                    myRejectRecipe[i].reason = findReason[0].reason
+                    myRejectRecipe[i].user_name = owner_id.user_name;
+                }
+                recipeService.getUrlImageOfArrRecipe(myRejectRecipe);
+                return resolve({
+                    messageCode: 1,
+                    message: 'get my reject recipe success!',
+                    data: myRejectRecipe
+                })
+            } catch (error) {
+                console.log(error);
+                reject({
+                    messageCode: 0,
+                    message: 'get my reject recipe fail!',
                 })
             }
         })
