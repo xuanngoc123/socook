@@ -1,3 +1,4 @@
+const { getUrlImage } = require("../config/multer");
 const db = require("../models/index");
 
 const interacService = {
@@ -270,6 +271,17 @@ const interacService = {
                     where: { user_id: req.user.user_id },
                     raw: true
                 })
+                let lengthComment = findMyComment.length;
+                for (let i = 0; i < lengthComment; i++) {
+                    let findRecipe = await db.Recipe.findOne({
+                        where: {
+                            id: findMyComment[i].recipe_id
+                        },
+                        raw: true
+                    })
+                    findMyComment[i].title = findRecipe.title
+                }
+
                 return resolve({
                     messageCode: 1,
                     message: 'get history comment success!',
@@ -520,6 +532,10 @@ const interacService = {
                         let findUserCreateNotifi = await db.Login_info.findOne({
                             where: { user_id: getMyNotification[i].create_user_id }
                         })
+                        let infoUser = await db.User.findOne({
+                            where: { user_id: getMyNotification[i].create_user_id }
+                        })
+                        getMyNotification[i].avatar_image = getUrlImage(infoUser.avatar_image);
                         getMyNotification[i].create_user_name = findUserCreateNotifi.user_name;
                     }
                 }
