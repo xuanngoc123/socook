@@ -561,10 +561,6 @@ const recipeService = {
                 let findRecipe = await db.Recipe.findOne({
                     where: {
                         id: req.body.recipe_id,
-
-                        is_allowed: [0, 2]
-
-
                     }
                 })
                 if (!findRecipe) {
@@ -590,6 +586,7 @@ const recipeService = {
 
                 findRecipe.last_update = Date.now()
                 findRecipe.update_by = req.user.user_id
+                findRecipe.is_allowed = 0
                 await findRecipe.save({ transaction });
 
                 let main_image_url = req.files.filter(x => x.fieldname == 'main_image_url');
@@ -883,7 +880,10 @@ const recipeService = {
             const transaction = await db.sequelize.transaction();
             try {
                 let recipe = await db.Recipe.findOne({
-                    where: { id: req.body.recipe_id },
+                    where: {
+                        id: req.body.recipe_id,
+                        is_allowed: 0,
+                    },
                 })
                 if (!recipe) {
                     return resolve({
@@ -892,23 +892,35 @@ const recipeService = {
                     })
                 }
                 recipe.is_allowed = 1
-                await recipe.save({ transaction });
 
-                let followUser = await db.Follow.findAll({
-                    where: { followed_user_id: recipe.owner_id }
-                })
-                if (followUser) {
-                    for (let i = 0; i < followUser.length; i++) {
-                        await db.Notification.create({
-                            type: 'đăng bài viết mới',
-                            receive_user_id: followUser[i].follow_user_id,
-                            recipe_id: recipe.id,
-                            create_user_id: recipe.owner_id,
-                            create_time: Date.now(),
-                            is_viewed: 0
-                        }, { transaction })
+                await db.Notification.create({
+                    type: 'duyệt bài viết',
+                    receive_user_id: recipe.owner_id,
+                    recipe_id: recipe.id,
+                    create_user_id: req.user.user_id,
+                    create_time: Date.now(),
+                    is_viewed: 0
+                }, { transaction })
+
+                if (recipe.is_notification == 0 || recipe.is_notification == null) {
+                    let followUser = await db.Follow.findAll({
+                        where: { followed_user_id: recipe.owner_id }
+                    })
+                    if (followUser) {
+                        for (let i = 0; i < followUser.length; i++) {
+                            await db.Notification.create({
+                                type: 'đăng bài viết mới',
+                                receive_user_id: followUser[i].follow_user_id,
+                                recipe_id: recipe.id,
+                                create_user_id: recipe.owner_id,
+                                create_time: Date.now(),
+                                is_viewed: 0
+                            }, { transaction })
+                        }
                     }
+                    recipe.is_notification = 1
                 }
+                await recipe.save({ transaction });
                 await transaction.commit()
                 return resolve({
                     messageCode: 1,

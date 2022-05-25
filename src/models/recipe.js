@@ -30,7 +30,8 @@ module.exports = (sequelize, DataTypes) => {
         cooking_time: DataTypes.INTEGER,
         create_time: DataTypes.DATE,
         last_update: DataTypes.DATE,
-        update_by: DataTypes.STRING
+        update_by: DataTypes.STRING,
+        is_notification: DataTypes.INTEGER,
     }, {
         sequelize,
         modelName: 'Recipe',
