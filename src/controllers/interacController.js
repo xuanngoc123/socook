@@ -139,6 +139,22 @@ const interacController = {
             return res.status(500).json(error)
         }
     },
+    updateNotification: async (req, res) => {
+        try {
+            let data = await interacService.resolveUpdateNotification(req);
+            return res.status(200).json(data)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
+    updateAllNotification: async (req, res) => {
+        try {
+            let data = await interacService.resolveUpdateAllNotification(req);
+            return res.status(200).json(data)
+        } catch (error) {
+            return res.status(500).json(error)
+        }
+    },
 }
 
 module.exports = interacController

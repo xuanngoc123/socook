@@ -33,4 +33,9 @@ router.get('/notification', authMiddleware.veryfiTokenActive, interacController.
 router.post('/like-comment', authMiddleware.veryfiTokenActive, interacController.likeComment)
 
 router.delete('/dislike-comment', authMiddleware.veryfiTokenActive, interacController.dislikeComment)
+
+router.put('/notification', authMiddleware.veryfiTokenActive, interacController.updateNotification)
+
+router.put('/allnotification', authMiddleware.veryfiTokenActive, interacController.updateAllNotification)
+
 module.exports = router;

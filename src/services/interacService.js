@@ -671,6 +671,80 @@ const interacService = {
             }
         })
     },
+    resolveUpdateNotification: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let findNotification = await db.Notification.findOne({
+                    where: {
+                        id: req.body.id
+                    },
+                })
+                if (!findNotification) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'notification not found!'
+                    })
+                } else {
+                    if (findNotification.receive_user_id != req.user.user_id) {
+                        return resolve({
+                            messageCode: 3,
+                            message: 'you are not allowed!'
+                        })
+                    }
+                    else {
+                        findNotification.is_viewed = 1;
+                        await findNotification.save();
+                        return resolve({
+                            messageCode: 1,
+                            message: 'update notification success!'
+                        })
+                    }
+                }
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'update notification fail!'
+                })
+            }
+        })
+    },
+    resolveUpdateAllNotification: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let findAllNotification = await db.Notification.findAll({
+                    where: {
+                        receive_user_id: req.user.user_id,
+                        is_viewed: 0
+                    }
+                })
+                let notificationLength = findAllNotification.length
+                if (notificationLength == 0) {
+                    return resolve({
+                        messageCode: 2,
+                        message: 'no unseen notifications!'
+                    })
+                }
+                if (notificationLength > 0) {
+                    for (let i = 0; i < notificationLength; i++) {
+                        findAllNotification[i].is_viewed = 1;
+                        await findAllNotification[i].save()
+                    }
+
+                    return resolve({
+                        messageCode: 1,
+                        message: 'update all notification success!'
+                    })
+                }
+            } catch (error) {
+                console.log(error)
+                reject({
+                    messageCode: 0,
+                    message: 'update all notification fail!'
+                })
+            }
+        })
+    },
 }
 
 module.exports = interacService
