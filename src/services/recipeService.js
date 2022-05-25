@@ -590,7 +590,6 @@ const recipeService = {
 
                 findRecipe.last_update = Date.now()
                 findRecipe.update_by = req.user.user_id
-                findRecipe.is_allowed = 0
                 await findRecipe.save({ transaction });
 
                 let main_image_url = req.files.filter(x => x.fieldname == 'main_image_url');
