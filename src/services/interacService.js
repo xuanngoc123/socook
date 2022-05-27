@@ -280,6 +280,7 @@ const interacService = {
                         raw: true
                     })
                     findMyComment[i].title = findRecipe.title
+                    findMyComment[i].main_image_url = getUrlImage(findRecipe.main_image_url)
                 }
 
                 return resolve({
