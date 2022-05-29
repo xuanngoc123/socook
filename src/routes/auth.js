@@ -15,36 +15,35 @@ router.post('/resentlink', authMiddleware.veryfiToken, authController.reSentLink
 //login
 router.post('/login', validateAuth.validateLogin(), authController.loginUser);
 
+router.post('/login-google', authController.loginGoogle);
+
+router.post('/login-facebook', authController.loginFacebook);
+
+const successLoginUrl = "http://localhost:3000/login/success";
+const errorLoginUrl = "http://localhost:3000/login/error";
+
+
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-router.get('/google/callback', passport.authenticate('google', { successRedirect: `${process.env.BASE_URL_FRONTEND}/` }), (req, res) => {
-    if (req.user) {
-        res.status(200).json(req.user)
-
-    } else {
-        res.status(500).json({
-            messageCode: 0,
-            message: "login fail!",
-        })
+router.get('/google/callback',
+    passport.authenticate('google'),
+    (req, res) => {
+        console.log(req.user);
+        res.json(req.user)
     }
-});
+);
 
 router.get('/facebook', passport.authenticate('facebook', { scope: ['email'] }));
 
-router.get('/facebook/callback', passport.authenticate('facebook'), (req, res) => {
-    // if (req.user) {
-    //     res.status(200).json(req.user)
+router.get('/facebook/callback',
+    passport.authenticate('facebook', {
+        session: false,
+    }),
+    (req, res) => {
+        console.log(req.user);
+        res.json(req.user);
 
-    // } else {
-    //     res.status(500).json({
-    //         messageCode: 0,
-    //         message: "login fail!",
-    //     })
-    // }
-    console.log(req.user);
-    res.send(req.user);
-
-});
+    });
 
 //change password
 router.put('/changepassword', authMiddleware.veryfiTokenActive, validateAuth.validateChangePassword(), authController.changePassword)
@@ -58,6 +57,8 @@ router.put('/savepassword', authController.savePassword)
 router.get('/checktoken', authMiddleware.checkToken, (req, res) => {
     return res.status(200).json(req.result);
 });
+
+
 
 
 module.exports = router;

@@ -5,6 +5,7 @@ const nodemailer = require("nodemailer");
 const { getUrlImage } = require("../config/multer");
 const sendMail = require("../config/nodemailer");
 const { Op } = require("sequelize");
+const axios = require("axios");
 
 const authService = {
     resolveRegisterUser: async (data) => {
@@ -432,6 +433,173 @@ const authService = {
                 reject({
                     messageCode: 0,
                     message: "sent mail fail!",
+                })
+            }
+        })
+    },
+    resolveLoginGoogle: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const userInfoGoogle = await axios.get(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${req.body.token}`)
+                .catch(err => {
+                    throw err;
+                })
+            const transaction = await db.sequelize.transaction();
+            try {
+                const checkUserExit = await db.Login_info.findOne({
+                    where: {
+                        [Op.or]: [{ email: userInfoGoogle.data.email }, { google_id: userInfoGoogle.data.sub }]
+                    }
+                })
+                if (checkUserExit) {
+                    let user = await db.User.findOne({
+                        where: { user_id: checkUserExit.user_id },
+                        raw: true
+                    });
+                    let accessToken = authService.generateAccessToken(checkUserExit, user);
+                    let refreshToken = authService.generateRefreshToken(checkUserExit, user);
+
+                    user.avatar_image = getUrlImage(user.avatar_image)
+                    user.cover_image = getUrlImage(user.cover_image)
+                    user.status = checkUserExit.status;
+                    user.email = checkUserExit.email;
+                    user.user_name = checkUserExit.user_name
+                    let data = {
+                        messageCode: 1,
+                        message: "login success!",
+                        accessToken,
+                        refreshToken,
+                        user
+                    }
+                    return resolve(data)
+                }
+                else {
+                    let createUser = await db.User.create({
+                        full_name: userInfoGoogle.data.name,
+                        avatar_image: process.env.AVATAR_KEY,
+                        cover_image: process.env.COVER_KEY,
+                        create_time: Date.now()
+                    }, { transaction })
+                    let createLogininfo = await db.Login_info.create({
+                        user_id: createUser.user_id,
+                        user_name: userInfoGoogle.data.name,
+                        google_id: userInfoGoogle.data.sub,
+                        email: userInfoGoogle.data.email,
+                        status: userInfoGoogle.data.email_verified ? 1 : 0,
+                        role: 'user'
+                    }, { transaction })
+                    await transaction.commit();
+
+                    let findUser = await db.User.findOne({
+                        where: { user_id: createUser.user_id },
+                        raw: true
+                    });
+                    let accessToken = authService.generateAccessToken(createLogininfo, createUser);
+                    let refreshToken = authService.generateRefreshToken(createLogininfo, createUser);
+
+                    findUser.avatar_image = getUrlImage(findUser.avatar_image);
+                    findUser.cover_image = getUrlImage(findUser.cover_image);
+                    findUser.status = createLogininfo.status;
+                    findUser.email = createLogininfo.email;
+                    findUser.user_name = createLogininfo.user_name
+                    let data = {
+                        messageCode: 1,
+                        message: "login success!",
+                        accessToken,
+                        refreshToken,
+                        user: findUser
+                    }
+
+                    return resolve(data)
+
+                }
+            } catch (error) {
+                await transaction.rollback();
+                console.log(error);
+                return done(error, {
+                    messageCode: 0,
+                    message: "login fail!",
+                })
+            }
+        })
+    },
+    resolveLoginFacebook: async (req) => {
+        return new Promise(async (resolve, reject) => {
+            const userInfoFacebook = await axios.get(`https://graph.facebook.com/me?access_token=${req.body.token}`)
+                .catch(err => {
+                    throw err;
+                })
+            const transaction = await db.sequelize.transaction();
+            try {
+                const checkUserExit = await db.Login_info.findOne({
+                    where: {
+                        facebook_id: userInfoFacebook.data.id
+                    }
+                })
+                if (checkUserExit) {
+                    let user = await db.User.findOne({
+                        where: { user_id: checkUserExit.user_id },
+                        raw: true
+                    });
+                    let accessToken = authService.generateAccessToken(checkUserExit, user);
+                    let refreshToken = authService.generateRefreshToken(checkUserExit, user);
+
+                    user.avatar_image = getUrlImage(user.avatar_image)
+                    user.cover_image = getUrlImage(user.cover_image)
+                    user.status = checkUserExit.status;
+                    user.email = checkUserExit.email;
+                    user.user_name = checkUserExit.user_name
+                    let data = {
+                        messageCode: 1,
+                        message: "login success!",
+                        accessToken,
+                        refreshToken,
+                        user
+                    }
+                    return resolve(data)
+                } else {
+                    let createUser = await db.User.create({
+                        full_name: userInfoFacebook.data.name,
+                        avatar_image: process.env.AVATAR_KEY,
+                        cover_image: process.env.COVER_KEY,
+                        create_time: Date.now()
+                    }, { transaction })
+                    let createLogininfo = await db.Login_info.create({
+                        user_id: createUser.user_id,
+                        user_name: userInfoFacebook.data.name,
+                        facebook_id: userInfoFacebook.data.id,
+                        status: 1,
+                        role: 'user'
+                    }, { transaction })
+                    await transaction.commit();
+
+                    let findUser = await db.User.findOne({
+                        where: { user_id: createUser.user_id },
+                        raw: true
+                    });
+                    let accessToken = authService.generateAccessToken(createLogininfo, createUser);
+                    let refreshToken = authService.generateRefreshToken(createLogininfo, createUser);
+
+                    findUser.avatar_image = getUrlImage(findUser.avatar_image)
+                    findUser.cover_image = getUrlImage(findUser.cover_image)
+                    findUser.status = createLogininfo.status;
+                    findUser.email = createLogininfo.email;
+                    findUser.user_name = createLogininfo.user_name
+                    let data = {
+                        messageCode: 1,
+                        message: "login success!",
+                        accessToken,
+                        refreshToken,
+                        user: findUser
+                    }
+
+                    return resolve(data)
+                }
+            } catch (error) {
+                await transaction.rollback();
+                console.log(error);
+                return reject(error, {
+                    messageCode: 0,
+                    message: "login fail!",
                 })
             }
         })
