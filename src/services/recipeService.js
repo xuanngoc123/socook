@@ -6,7 +6,6 @@ const recipeService = {
         return new Promise(async (resolve, reject) => {
             const transaction = await db.sequelize.transaction();
             try {
-
                 let recipe = await db.Recipe.findOne({
                     where: { id: id },
                 })
@@ -75,14 +74,37 @@ const recipeService = {
             }
         })
     },
-    resolveGetRecipe: async (id, req = null) => {
+    resolveGetRecipe: async (id, req) => {
         return new Promise(async (resolve, reject) => {
             const transaction = await db.sequelize.transaction();
             try {
+                var recipe
+                if (req.result.user == null || req.result.user == undefined) {
+                    recipe = await db.Recipe.findOne({
+                        where: {
+                            id: id,
+                            is_allowed: 1
+                        }
+                    })
+                }
+                else {
+                    let findRecipe = await db.Recipe.findOne({
+                        where: {
+                            id: id
+                        }
+                    })
+                    if (req.result.user.user_id == findRecipe.owner_id || req.result.user.role == 'admin') {
+                        recipe = findRecipe
+                    } else {
+                        recipe = await db.Recipe.findOne({
+                            where: {
+                                id: id,
+                                is_allowed: 1
+                            }
+                        })
+                    }
 
-                let recipe = await db.Recipe.findOne({
-                    where: { id: id }
-                })
+                }
                 if (!recipe) {
                     return resolve({
                         messageCode: 2,
@@ -637,78 +659,6 @@ const recipeService = {
                 }
 
 
-                // let findStep = await db.Step.findAll({
-                //     where: { recipe_id: findRecipe.id, },
-                // })
-                // if (number_of_step >= findStep.length) {
-                //     for (let i = 1; i <= number_of_step; i++) {
-                //         if (i <= findStep.length) {
-                //             let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
-                //             let numberOfImageEachStep = listImgae.length;
-                //             let list_key = '';
-                //             if (numberOfImageEachStep > 0) {
-                //                 for (let i = 0; i < numberOfImageEachStep; i++) {
-                //                     list_key = list_key + ' ' + listImgae[i].key
-                //                 }
-                //             }
-                //             let findStepByNumber = await db.Step.findOne({
-                //                 where: { recipe_id: findRecipe.id, number: i },
-                //             })
-                //             findStepByNumber.image_url_list = list_key;
-                //             if (number_of_step == 1)
-                //                 findStepByNumber.content = req.body.step;
-                //             else findStepByNumber.content = req.body.step[i - 1];
-                //             await findStepByNumber.save();
-                //         } else {
-                //             let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
-                //             let numberOfImageEachStep = listImgae.length;
-                //             let list_key = '';
-                //             if (numberOfImageEachStep > 0) {
-                //                 for (let i = 0; i < numberOfImageEachStep; i++) {
-                //                     list_key = list_key + ' ' + listImgae[i].key
-                //                 }
-                //             }
-                //             let createNewStep = await db.Step.create({
-                //                 recipe_id: findRecipe.id,
-                //                 number: i,
-                //                 content: req.body.step[i - 1]
-                //             })
-                //             createNewStep.image_url_list = list_key;
-                //             await createNewStep.save();
-                //         }
-
-                //     }
-                // } else {
-                //     for (let i = 1; i <= findStep.length; i++) {
-                //         if (i <= number_of_step) {
-                //             let listImgae = req.files.filter(x => x.fieldname == `imagestep${i}`)
-                //             let numberOfImageEachStep = listImgae.length;
-                //             let list_key = '';
-                //             if (numberOfImageEachStep > 0) {
-                //                 for (let i = 0; i < numberOfImageEachStep; i++) {
-                //                     list_key = list_key + ' ' + listImgae[i].key
-                //                 }
-                //             }
-                //             let findStepByNumber = await db.Step.findOne({
-                //                 where: { recipe_id: findRecipe.id, number: i },
-                //             })
-                //             findStepByNumber.image_url_list = list_key;
-                //             if (number_of_step == 1)
-                //                 findStepByNumber.content = req.body.step;
-                //             else findStepByNumber.content = req.body.step[i - 1];
-                //             await findStepByNumber.save();
-                //         }
-                //         else {
-                //             let findStepDelete = await db.Step.destroy({
-                //                 where: {
-                //                     recipe_id: findRecipe.id,
-                //                     number: i
-                //                 }
-                //             })
-                //         }
-                //     }
-                // }
-
                 //Update TABLE CATEGORY HAS RECIPE
                 await db.Category_has_recipe.destroy({
                     where: { recipe_id: findRecipe.id }
@@ -973,7 +923,7 @@ const recipeService = {
         return new Promise(async (resolve, reject) => {
             try {
                 const [listRecipe, lrc_metadata] = await db.sequelize.query(
-                    `SELECT recipe.* FROM recipe JOIN collection_has_recipe ON recipe.id = collection_has_recipe.recipe_id WHERE collection_has_recipe.collection_id = ${req.query.id};`
+                    `SELECT recipe.* FROM recipe JOIN collection_has_recipe ON recipe.id = collection_has_recipe.recipe_id WHERE recipe.is_allowed = 1 AND collection_has_recipe.collection_id = ${req.query.id};`
                 );
                 recipeService.getUrlImageOfArrRecipe(listRecipe);
                 // if (listRecipe.length != 0) {
@@ -1007,7 +957,7 @@ const recipeService = {
             try {
                 let ingerdient = req.query.ingerdient;
                 const [listRecipe, lrc_metadata] = await db.sequelize.query(
-                    `SELECT * FROM recipe WHERE recipe.id in (SELECT recipe_has_ingredient.recipe_id FROM recipe_has_ingredient WHERE recipe_has_ingredient.ingredient_id IN (SELECT ingredient.id FROM ingredient WHERE ingredient.name = ' ${ingerdient}')) order by recipe.create_time DESC;`
+                    `SELECT * FROM recipe WHERE recipe.is_allowed = 1 AND recipe.id in (SELECT recipe_has_ingredient.recipe_id FROM recipe_has_ingredient WHERE recipe_has_ingredient.ingredient_id IN (SELECT ingredient.id FROM ingredient WHERE ingredient.name = ' ${ingerdient}')) order by recipe.create_time DESC;`
                 );
                 for (let i = 0; i < listRecipe.length; i++) {
                     const owner_id = await db.Login_info.findOne({
@@ -1036,7 +986,7 @@ const recipeService = {
             try {
                 let limit = req.query.limit;
                 const [listRecipe, lrc_metadata] = await db.sequelize.query(
-                    `select * from recipe order by recipe.create_time DESC limit ${limit};`
+                    `select * from recipe WHERE recipe.is_allowed = 1 order by recipe.create_time DESC limit ${limit};`
                 );
                 for (let i = 0; i < listRecipe.length; i++) {
                     const owner_id = await db.Login_info.findOne({
@@ -1095,7 +1045,7 @@ const recipeService = {
                     limit = 5;
                 }
                 const [listRecipe, lrc_metadata] = await db.sequelize.query(
-                    `select * from recipe order by recipe.total_views DESC limit ${limit};`
+                    `select * from recipe WHERE recipe.is_allowed = 1 order by recipe.total_views DESC limit ${limit};`
                 );
                 for (let i = 0; i < listRecipe.length; i++) {
                     const owner_id = await db.Login_info.findOne({
