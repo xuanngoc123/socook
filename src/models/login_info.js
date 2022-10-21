@@ -1,7 +1,5 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const {Model} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Login_info extends Model {
     /**
@@ -12,26 +10,28 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       // this.belongsTo(models.user);
-
     }
   }
-  Login_info.init({
-    user_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+  Login_info.init(
+    {
+      user_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      user_name: DataTypes.STRING,
+      encrypted_password: DataTypes.STRING,
+      google_id: DataTypes.STRING,
+      facebook_id: DataTypes.STRING,
+      email: DataTypes.STRING,
+      status: DataTypes.INTEGER,
+      role: DataTypes.STRING,
     },
-    user_name: DataTypes.STRING,
-    encrypted_password: DataTypes.STRING,
-    google_id: DataTypes.STRING,
-    facebook_id: DataTypes.STRING,
-    email: DataTypes.STRING,
-    status: DataTypes.INTEGER,
-    role: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'Login_info',
-    tableName: 'login_info'
-  });
+    {
+      sequelize,
+      modelName: 'Login_info',
+      tableName: 'login_info',
+    },
+  );
   return Login_info;
 };

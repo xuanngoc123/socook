@@ -1,6 +1,6 @@
-const multer = require("multer");
-const { upload } = require("../config/multer");
-const userService = require("../services/userService");
+const multer = require('multer');
+const {upload} = require('../config/multer');
+const userService = require('../services/userService');
 const userController = {
   getMyInfo: async (req, res) => {
     try {

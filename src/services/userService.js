@@ -1,9 +1,11 @@
-const { getUrlImage } = require("../config/multer");
-const db = require("../models/index");
+const {getUrlImage} = require('../config/multer');
+const db = require('../models/index');
 
 const userService = {
   getNumberOfFollow: async (user_id) => {
-    const [countFollow] = await db.sequelize.query(`SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user_id} GROUP by followed_user_id`);
+    const [countFollow] = await db.sequelize.query(
+      `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user_id} GROUP by followed_user_id`,
+    );
     console.log(countFollow[0].number_of_followers);
     return countFollow[0].number_of_followers;
   },
@@ -11,7 +13,7 @@ const userService = {
     return new Promise(async (resolve, reject) => {
       try {
         let user = await db.User.findOne({
-          where: { user_id: data.user.user_id },
+          where: {user_id: data.user.user_id},
           raw: true,
         });
         let userLoginInfo = await db.Login_info.findOne({
@@ -25,7 +27,9 @@ const userService = {
         user.cover_image = getUrlImage(user.cover_image);
         user.email = userLoginInfo.email;
         user.user_name = userLoginInfo.user_name;
-        const [countFollow] = await db.sequelize.query(`SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`);
+        const [countFollow] = await db.sequelize.query(
+          `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`,
+        );
         if (countFollow.length != 0) {
           user.countFollow = countFollow[0].number_of_followers;
         } else {
@@ -33,14 +37,14 @@ const userService = {
         }
         return resolve({
           messageCode: 1,
-          message: "get my info success!",
+          message: 'get my info success!',
           user: user,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get my info fail!",
+          message: 'get my info fail!',
         });
       }
     });
@@ -51,7 +55,7 @@ const userService = {
       try {
         let user_id = data.user.user_id;
         let user = await db.User.findOne({
-          where: { user_id: user_id },
+          where: {user_id: user_id},
         });
 
         if (data.body.full_name) user.full_name = data.body.full_name;
@@ -62,15 +66,15 @@ const userService = {
         if (data.body.district) user.district = data.body.district;
         user.last_update = Date.now();
 
-        await user.save({ transaction });
+        await user.save({transaction});
         await transaction.commit();
 
         let userReturn = await db.User.findOne({
-          where: { user_id: user_id },
+          where: {user_id: user_id},
           raw: true,
         });
         let login_info = await db.Login_info.findOne({
-          where: { user_id: user_id },
+          where: {user_id: user_id},
         });
         userReturn.avatar_image = getUrlImage(userReturn.avatar_image);
         userReturn.cover_image = getUrlImage(userReturn.cover_image);
@@ -79,7 +83,7 @@ const userService = {
         userReturn.user_name = login_info.user_name;
         return resolve({
           messageCode: 1,
-          message: "change info success!",
+          message: 'change info success!',
           user: userReturn,
         });
       } catch (error) {
@@ -87,7 +91,7 @@ const userService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "change info fali!",
+          message: 'change info fali!',
         });
       }
     });
@@ -97,25 +101,25 @@ const userService = {
       try {
         if (req.query.user_name) {
           var userLogin = await db.Login_info.findOne({
-            where: { user_name: req.query.user_name },
+            where: {user_name: req.query.user_name},
             raw: true,
           });
           if (userLogin) {
             var user = await db.User.findOne({
-              where: { user_id: userLogin.user_id },
+              where: {user_id: userLogin.user_id},
               raw: true,
             });
           }
         } else if (req.query.user_id) {
           var user = await db.User.findOne({
-            where: { user_id: req.query.user_id },
+            where: {user_id: req.query.user_id},
             raw: true,
           });
         }
         if (!user) {
           return resolve({
             messageCode: 2,
-            message: "user not found!",
+            message: 'user not found!',
           });
         }
 
@@ -148,7 +152,9 @@ const userService = {
         user.email = userLoginInfo.email;
         user.user_name = userLoginInfo.user_name;
 
-        const [countFollow] = await db.sequelize.query(`SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`);
+        const [countFollow] = await db.sequelize.query(
+          `SELECT COUNT(follow_user_id) AS number_of_followers FROM follow WHERE follow.followed_user_id = ${user.user_id} GROUP by followed_user_id`,
+        );
         if (countFollow.length != 0) {
           user.countFollow = countFollow[0].number_of_followers;
         } else {
@@ -157,14 +163,14 @@ const userService = {
 
         return resolve({
           messageCode: 1,
-          message: "get user info success!",
+          message: 'get user info success!',
           user: user,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get user info fail!",
+          message: 'get user info fail!',
         });
       }
     });
@@ -175,26 +181,26 @@ const userService = {
       try {
         let user_id = req.user.user_id;
         let user = await db.User.findOne({
-          where: { user_id: user_id },
+          where: {user_id: user_id},
         });
 
         let result = req.file;
         if (!result) {
           return resolve({
             messageCode: 2,
-            message: "upload image fail!",
+            message: 'upload image fail!',
           });
         } else {
           user.avatar_image = result.key;
-          await user.save({ transaction });
+          await user.save({transaction});
           await transaction.commit();
 
           let userReturn = await db.User.findOne({
-            where: { user_id: user_id },
+            where: {user_id: user_id},
             raw: true,
           });
           let login_info = await db.Login_info.findOne({
-            where: { user_id: user_id },
+            where: {user_id: user_id},
             raw: true,
           });
           userReturn.avatar_image = getUrlImage(userReturn.avatar_image);
@@ -204,7 +210,7 @@ const userService = {
           userReturn.user_name = login_info.user_name;
           return resolve({
             messageCode: 1,
-            message: "change image success!",
+            message: 'change image success!',
             user: userReturn,
           });
         }
@@ -213,7 +219,7 @@ const userService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "change image fail!",
+          message: 'change image fail!',
         });
       }
     });
@@ -224,25 +230,25 @@ const userService = {
       try {
         let user_id = req.user.user_id;
         let user = await db.User.findOne({
-          where: { user_id: user_id },
+          where: {user_id: user_id},
         });
 
         let result = req.file;
         if (!result) {
           return resolve({
             messageCode: 2,
-            message: "upload image fail!",
+            message: 'upload image fail!',
           });
         } else {
           user.cover_image = result.key;
-          await user.save({ transaction });
+          await user.save({transaction});
           await transaction.commit();
           let userReturn = await db.User.findOne({
-            where: { user_id: user_id },
+            where: {user_id: user_id},
             raw: true,
           });
           let login_info = await db.Login_info.findOne({
-            where: { user_id: user_id },
+            where: {user_id: user_id},
             raw: true,
           });
           userReturn.avatar_image = getUrlImage(userReturn.avatar_image);
@@ -252,7 +258,7 @@ const userService = {
           userReturn.user_name = login_info.user_name;
           return resolve({
             messageCode: 1,
-            message: "change image success!",
+            message: 'change image success!',
             user: userReturn,
           });
         }
@@ -261,7 +267,7 @@ const userService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "change image fail!",
+          message: 'change image fail!',
         });
       }
     });
@@ -270,7 +276,9 @@ const userService = {
     return new Promise(async (resolve, reject) => {
       try {
         let limit = req.query.limit;
-        const [countFollow] = await db.sequelize.query(`SELECT follow.followed_user_id, COUNT(follow_user_id) AS number_of_followers FROM follow GROUP by followed_user_id ORDER BY COUNT(follow_user_id) DESC LIMIT ${limit}`);
+        const [countFollow] = await db.sequelize.query(
+          `SELECT follow.followed_user_id, COUNT(follow_user_id) AS number_of_followers FROM follow GROUP by followed_user_id ORDER BY COUNT(follow_user_id) DESC LIMIT ${limit}`,
+        );
         var arr = [];
         for (let i = 0; i < countFollow.length; i++) {
           arr.push(countFollow[i].followed_user_id);
@@ -288,14 +296,14 @@ const userService = {
         }
         return resolve({
           messageCode: 1,
-          message: "get top user success!",
+          message: 'get top user success!',
           data: topUser,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get top user fail!",
+          message: 'get top user fail!',
         });
       }
     });
@@ -307,20 +315,22 @@ const userService = {
         if (!req.query.limit) {
           limit = 5;
         }
-        const [countRecipe] = await db.sequelize.query(`SELECT login_info.user_id, login_info.user_name, user.avatar_image, t1.numberOfRecipes, t1.numberOfViews  FROM login_info JOIN (SELECT recipe.owner_id AS id, COUNT(recipe.id) AS numberOfRecipes, SUM(recipe.total_views) AS numberOfViews FROM recipe WHERE recipe.is_allowed=1 GROUP BY recipe.owner_id ORDER BY numberOfRecipes DESC LIMIT ${limit}) t1 ON login_info.user_id = t1.id JOIN user ON user.user_id = t1.id;`);
+        const [countRecipe] = await db.sequelize.query(
+          `SELECT login_info.user_id, login_info.user_name, user.avatar_image, t1.numberOfRecipes, t1.numberOfViews  FROM login_info JOIN (SELECT recipe.owner_id AS id, COUNT(recipe.id) AS numberOfRecipes, SUM(recipe.total_views) AS numberOfViews FROM recipe WHERE recipe.is_allowed=1 GROUP BY recipe.owner_id ORDER BY numberOfRecipes DESC LIMIT ${limit}) t1 ON login_info.user_id = t1.id JOIN user ON user.user_id = t1.id;`,
+        );
         for (let i = 0; i < countRecipe.length; i++) {
           countRecipe[i].avatar_image = getUrlImage(countRecipe[i].avatar_image);
         }
         return resolve({
           messageCode: 1,
-          message: "get top user success!",
+          message: 'get top user success!',
           data: countRecipe,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get top user fail!",
+          message: 'get top user fail!',
         });
       }
     });
@@ -328,7 +338,9 @@ const userService = {
   resolveGetAllUser: async () => {
     return new Promise(async (resolve, reject) => {
       try {
-        let [findAllUser] = await db.sequelize.query(`select * from user where user_id in(select user_id from login_info where status =1 and role = 'user')`);
+        let [findAllUser] = await db.sequelize.query(
+          `select * from user where user_id in(select user_id from login_info where status =1 and role = 'user')`,
+        );
         for (let i = 0; i < findAllUser.length; i++) {
           findAllUser[i].avatar_image = getUrlImage(findAllUser[i].avatar_image);
           findAllUser[i].cover_image = getUrlImage(findAllUser[i].cover_image);

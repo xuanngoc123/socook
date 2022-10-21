@@ -1,7 +1,5 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const {Model} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -14,26 +12,29 @@ module.exports = (sequelize, DataTypes) => {
       // this.hasOne(models.login_info, {sourceKey: 'user_id'});
     }
   }
-  User.init({
-    user_id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
+  User.init(
+    {
+      user_id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+      full_name: DataTypes.STRING,
+      introduction: DataTypes.TEXT,
+      date_of_birth: DataTypes.DATE,
+      city: DataTypes.STRING,
+      gender: DataTypes.INTEGER,
+      district: DataTypes.STRING,
+      avatar_image: DataTypes.TEXT,
+      cover_image: DataTypes.TEXT,
+      create_time: DataTypes.DATE,
+      last_update: DataTypes.DATE,
     },
-    full_name: DataTypes.STRING,
-    introduction: DataTypes.TEXT,
-    date_of_birth: DataTypes.DATE,
-    city: DataTypes.STRING,
-    gender: DataTypes.INTEGER,
-    district: DataTypes.STRING,
-    avatar_image: DataTypes.TEXT,
-    cover_image: DataTypes.TEXT,
-    create_time: DataTypes.DATE,
-    last_update: DataTypes.DATE,
-  }, {
-    sequelize,
-    modelName: 'User',
-    tableName: 'user'
-  });
+    {
+      sequelize,
+      modelName: 'User',
+      tableName: 'user',
+    },
+  );
   return User;
 };

@@ -1,10 +1,10 @@
 const env = {
   development: {
-    username: "root",
+    username: 'root',
     password: process.env.MYSQL_PASS,
-    database: "recipedb",
+    database: 'recipedb',
     host: process.env.MYSQL_HOST,
-    dialect: "mysql",
+    dialect: 'mysql',
     pool: {
       max: 20000,
       min: 0,
@@ -19,11 +19,11 @@ const env = {
     },
   },
   test: {
-    username: "root",
+    username: 'root',
     password: process.env.MYSQL_PASS,
-    database: "recipedb",
+    database: 'recipedb',
     host: process.env.MYSQL_HOST,
-    dialect: "mysql",
+    dialect: 'mysql',
     pool: {
       max: 20000,
       min: 0,
@@ -38,11 +38,11 @@ const env = {
     },
   },
   production: {
-    username: "root",
+    username: 'root',
     password: process.env.MYSQL_PASS,
-    database: "recipedb",
+    database: 'recipedb',
     host: process.env.MYSQL_HOST,
-    dialect: "mysql",
+    dialect: 'mysql',
     pool: {
       max: 20000,
       min: 0,

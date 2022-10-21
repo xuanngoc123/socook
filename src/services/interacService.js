@@ -1,5 +1,5 @@
-const { getUrlImage } = require("../config/multer");
-const db = require("../models/index");
+const {getUrlImage} = require('../config/multer');
+const db = require('../models/index');
 
 const interacService = {
   resolveCreateComment: async (req) => {
@@ -8,14 +8,14 @@ const interacService = {
       try {
         let recipe_id = req.body.recipe_id;
         let user_id = req.user.user_id;
-        let count = await db.Comment.max("id");
+        let count = await db.Comment.max('id');
         let findRecipe = await db.Recipe.findOne({
-          where: { id: recipe_id },
+          where: {id: recipe_id},
         });
         if (!findRecipe) {
           return resolve({
             messageCode: 2,
-            message: "recipe not found!",
+            message: 'recipe not found!',
           });
         }
         let createComment = await db.Comment.create(
@@ -28,44 +28,44 @@ const interacService = {
             last_update: Date.now(),
             update_by: user_id,
           },
-          { transaction },
+          {transaction},
         );
-        let listImgae = req.files.filter((x) => x.fieldname == "imagecomment");
+        let listImgae = req.files.filter((x) => x.fieldname == 'imagecomment');
         let numberOfImageEachStep = listImgae.length;
         if (numberOfImageEachStep > 0) {
-          let list_key = "";
+          let list_key = '';
           if (numberOfImageEachStep > 0) {
             for (let i = 0; i < numberOfImageEachStep; i++) {
-              list_key = list_key + " " + listImgae[i].key;
+              list_key = list_key + ' ' + listImgae[i].key;
             }
           }
           createComment.image_url_list = list_key;
-          await createComment.save({ transaction });
+          await createComment.save({transaction});
         }
         if (findRecipe.owner_id != req.user.user_id) {
           await db.Notification.create(
             {
-              type: "comment",
+              type: 'comment',
               receive_user_id: findRecipe.owner_id,
               recipe_id: findRecipe.id,
               create_user_id: req.user.user_id,
               create_time: Date.now(),
               is_viewed: 0,
             },
-            { transaction },
+            {transaction},
           );
         }
         await transaction.commit();
         return resolve({
           messageCode: 1,
-          message: "create comment success!",
+          message: 'create comment success!',
         });
       } catch (error) {
         console.log(error);
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "create comment fail!",
+          message: 'create comment fail!',
         });
       }
     });
@@ -83,16 +83,16 @@ const interacService = {
             last_update: Date.now(),
             update_by: req.user.user_id,
           },
-          { transaction },
+          {transaction},
         );
         let findComment = await db.Comment.findOne({
-          where: { id: req.body.parent_id },
+          where: {id: req.body.parent_id},
           raw: true,
         });
         if (req.user.user_id != findComment.user_id) {
           await db.Notification.create(
             {
-              type: "childcomment",
+              type: 'childcomment',
               receive_user_id: findComment.user_id,
               recipe_id: findComment.recipe_id,
               child_comment_id: createChildComment.id,
@@ -101,20 +101,20 @@ const interacService = {
               create_time: Date.now(),
               is_viewed: 0,
             },
-            { transaction },
+            {transaction},
           );
         }
         await transaction.commit();
         return resolve({
           messageCode: 1,
-          message: "create child comment success!",
+          message: 'create child comment success!',
         });
       } catch (error) {
         console.log(error);
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "create child comment fail!",
+          message: 'create child comment fail!',
         });
       }
     });
@@ -124,38 +124,38 @@ const interacService = {
       const transaction = await db.sequelize.transaction();
       try {
         let findComment = await db.Comment.findOne({
-          where: { id: req.body.id },
+          where: {id: req.body.id},
         });
         if (findComment.user_id != req.user.user_id) {
           return resolve({
             messageCode: 2,
-            message: "you are not allowed!",
+            message: 'you are not allowed!',
           });
         }
-        let listImgae = req.files.filter((x) => x.fieldname == "imagecomment");
+        let listImgae = req.files.filter((x) => x.fieldname == 'imagecomment');
         let numberOfImageEachStep = listImgae.length;
         findComment.content = req.body.content;
         if (numberOfImageEachStep > 0) {
-          let list_key = "";
+          let list_key = '';
           if (numberOfImageEachStep > 0) {
             for (let i = 0; i < numberOfImageEachStep; i++) {
-              list_key = list_key + " " + listImgae[i].key;
+              list_key = list_key + ' ' + listImgae[i].key;
             }
           }
           findComment.image_url_list = list_key;
         }
-        await findComment.save({ transaction });
+        await findComment.save({transaction});
         await transaction.commit();
         return resolve({
           messageCode: 1,
-          message: "update your comment success!",
+          message: 'update your comment success!',
         });
       } catch (error) {
         console.log(error);
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "update your comment fail!",
+          message: 'update your comment fail!',
         });
       }
     });
@@ -165,34 +165,34 @@ const interacService = {
       const transaction = await db.sequelize.transaction();
       try {
         let findChildComment = await db.Child_comment.findOne({
-          where: { id: req.body.child_comment_id },
+          where: {id: req.body.child_comment_id},
         });
         if (!findChildComment) {
           return resolve({
             messageCode: 3,
-            message: "child comment not found!",
+            message: 'child comment not found!',
           });
         }
         if (findChildComment.user_id != req.user.user_id) {
           return resolve({
             messageCode: 2,
-            message: "you are not allowed!",
+            message: 'you are not allowed!',
           });
         }
         findChildComment.content = req.body.content;
         findChildComment.last_update = Date.now();
-        await findChildComment.save({ transaction });
+        await findChildComment.save({transaction});
         await transaction.commit();
         return resolve({
           messageCode: 1,
-          message: "update your child comment success!",
+          message: 'update your child comment success!',
         });
       } catch (error) {
         console.log(error);
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "update your child comment fail!",
+          message: 'update your child comment fail!',
         });
       }
     });
@@ -202,45 +202,45 @@ const interacService = {
       const transaction = await db.sequelize.transaction();
       try {
         let findComment = await db.Comment.findOne({
-          where: { id: req.query.id },
+          where: {id: req.query.id},
         });
         if (!findComment) {
           return resolve({
             messageCode: 3,
-            message: "comment not found!",
+            message: 'comment not found!',
           });
         }
-        if (req.user.user_id != findComment.user_id && req.user.role != "admin") {
+        if (req.user.user_id != findComment.user_id && req.user.role != 'admin') {
           return resolve({
             messageCode: 2,
-            message: "you are not allowed!",
+            message: 'you are not allowed!',
           });
         }
         // var transaction = await db.sequelize.transaction();
 
         await db.Child_comment.destroy(
           {
-            where: { parent_id: req.query.id },
+            where: {parent_id: req.query.id},
           },
-          { transaction: transaction },
+          {transaction: transaction},
         );
         await db.Comment.destroy(
           {
-            where: { id: req.query.id },
+            where: {id: req.query.id},
           },
-          { transaction: transaction },
+          {transaction: transaction},
         );
         await transaction.commit();
         return resolve({
           messageCode: 1,
-          message: "delete your comment success!",
+          message: 'delete your comment success!',
         });
       } catch (error) {
         await transaction.rollback();
         console.log(error);
         reject({
           messageCode: 0,
-          message: "delete your comment fail!",
+          message: 'delete your comment fail!',
         });
       }
     });
@@ -250,37 +250,37 @@ const interacService = {
       const transaction = await db.sequelize.transaction();
       try {
         let findChildComment = await db.Child_comment.findOne({
-          where: { id: req.query.id },
+          where: {id: req.query.id},
         });
         if (!findChildComment) {
           return resolve({
             messageCode: 3,
-            message: "child comment not found!",
+            message: 'child comment not found!',
           });
         }
-        if (req.user.user_id != findChildComment.user_id && req.user.role != "admin") {
+        if (req.user.user_id != findChildComment.user_id && req.user.role != 'admin') {
           return resolve({
             messageCode: 2,
-            message: "you are not allowed!",
+            message: 'you are not allowed!',
           });
         }
         await db.Child_comment.destroy(
           {
-            where: { id: req.query.id },
+            where: {id: req.query.id},
           },
-          { transaction },
+          {transaction},
         );
         await transaction.commit();
         return resolve({
           messageCode: 1,
-          message: "delete your child comment success!",
+          message: 'delete your child comment success!',
         });
       } catch (error) {
         console.log(error);
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "delete your child comment fail!",
+          message: 'delete your child comment fail!',
         });
       }
     });
@@ -289,7 +289,7 @@ const interacService = {
     return new Promise(async (resolve, reject) => {
       try {
         let findMyComment = await db.Comment.findAll({
-          where: { user_id: req.user.user_id },
+          where: {user_id: req.user.user_id},
           raw: true,
         });
         let lengthComment = findMyComment.length;
@@ -306,14 +306,14 @@ const interacService = {
 
         return resolve({
           messageCode: 1,
-          message: "get history comment success!",
+          message: 'get history comment success!',
           data: findMyComment,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get history comment fail!",
+          message: 'get history comment fail!',
         });
       }
     });
@@ -331,7 +331,7 @@ const interacService = {
         if (!findRecipe) {
           return resolve({
             messageCode: 3,
-            message: "recipe not found!",
+            message: 'recipe not found!',
           });
         } else {
           let find = await db.Like.findOne({
@@ -346,30 +346,30 @@ const interacService = {
                 user_id: req.user.user_id,
                 recipe_id: req.body.recipe_id,
               },
-              { transaction },
+              {transaction},
             );
             if (findRecipe.owner_id != req.user.user_id) {
               await db.Notification.create(
                 {
-                  type: "like",
+                  type: 'like',
                   receive_user_id: findRecipe.owner_id,
                   recipe_id: findRecipe.id,
                   create_user_id: req.user.user_id,
                   create_time: Date.now(),
                   is_viewed: 0,
                 },
-                { transaction },
+                {transaction},
               );
             }
             await transaction.commit();
             return resolve({
               messageCode: 1,
-              message: "like success!",
+              message: 'like success!',
             });
           } else {
             return resolve({
               messageCode: 2,
-              message: "you were liked!",
+              message: 'you were liked!',
             });
           }
         }
@@ -378,7 +378,7 @@ const interacService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "like fail!",
+          message: 'like fail!',
         });
       }
     });
@@ -394,7 +394,7 @@ const interacService = {
         if (!findRecipe) {
           return resolve({
             messageCode: 3,
-            message: "recipe not found!",
+            message: 'recipe not found!',
           });
         } else {
           let find = await db.Like.findOne({
@@ -412,12 +412,12 @@ const interacService = {
             });
             return resolve({
               messageCode: 1,
-              message: "dislike success!",
+              message: 'dislike success!',
             });
           } else {
             return resolve({
               messageCode: 2,
-              message: "you have not liked!",
+              message: 'you have not liked!',
             });
           }
         }
@@ -425,7 +425,7 @@ const interacService = {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "dislike fail!",
+          message: 'dislike fail!',
         });
       }
     });
@@ -434,8 +434,8 @@ const interacService = {
     return new Promise(async (resolve, reject) => {
       try {
         let findLike = await db.Like.findAll({
-          where: { user_id: req.user.user_id },
-          attributes: ["recipe_id"],
+          where: {user_id: req.user.user_id},
+          attributes: ['recipe_id'],
           raw: true,
         });
         let arr = [];
@@ -449,14 +449,14 @@ const interacService = {
         });
         return resolve({
           messageCode: 1,
-          message: "get recipe liked success!",
+          message: 'get recipe liked success!',
           data: findRecipeLiked,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get recipe liked fail!",
+          message: 'get recipe liked fail!',
         });
       }
     });
@@ -474,7 +474,7 @@ const interacService = {
         if (findFollow) {
           return resolve({
             messageCode: 2,
-            message: "you followed user!",
+            message: 'you followed user!',
           });
         } else {
           await db.Follow.create(
@@ -483,24 +483,24 @@ const interacService = {
               follow_user_id: req.user.user_id,
               create_time: Date.now(),
             },
-            { transaction: transaction },
+            {transaction: transaction},
           );
 
           await db.Notification.create(
             {
-              type: "follow",
+              type: 'follow',
               receive_user_id: req.body.followed_user_id,
               create_user_id: req.user.user_id,
               create_time: Date.now(),
               is_viewed: 0,
             },
-            { transaction: transaction },
+            {transaction: transaction},
           );
 
           await transaction.commit();
           return resolve({
             messageCode: 1,
-            message: "follow success!",
+            message: 'follow success!',
           });
         }
       } catch (error) {
@@ -508,7 +508,7 @@ const interacService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "follow fail!",
+          message: 'follow fail!',
         });
       }
     });
@@ -526,7 +526,7 @@ const interacService = {
         if (!findFollow) {
           return resolve({
             messageCode: 2,
-            message: "you have not followed user!",
+            message: 'you have not followed user!',
           });
         } else {
           let destroyFollow = await db.Follow.destroy(
@@ -536,13 +536,13 @@ const interacService = {
                 follow_user_id: req.user.user_id,
               },
             },
-            { transaction: transaction },
+            {transaction: transaction},
           );
 
           await transaction.commit();
           return resolve({
             messageCode: 1,
-            message: "unfollow success!",
+            message: 'unfollow success!',
           });
         }
       } catch (error) {
@@ -550,7 +550,7 @@ const interacService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "unfollow fail!",
+          message: 'unfollow fail!',
         });
       }
     });
@@ -559,16 +559,16 @@ const interacService = {
     return new Promise(async (resolve, reject) => {
       try {
         let getMyNotification = await db.Notification.findAll({
-          where: { receive_user_id: req.user.user_id },
+          where: {receive_user_id: req.user.user_id},
           raw: true,
         });
         if (getMyNotification) {
           for (let i = 0; i < getMyNotification.length; i++) {
             let findUserCreateNotifi = await db.Login_info.findOne({
-              where: { user_id: getMyNotification[i].create_user_id },
+              where: {user_id: getMyNotification[i].create_user_id},
             });
             let infoUser = await db.User.findOne({
-              where: { user_id: getMyNotification[i].create_user_id },
+              where: {user_id: getMyNotification[i].create_user_id},
             });
             getMyNotification[i].avatar_image = getUrlImage(infoUser.avatar_image);
             getMyNotification[i].create_user_name = findUserCreateNotifi?.user_name;
@@ -576,14 +576,14 @@ const interacService = {
         }
         return resolve({
           messageCode: 1,
-          message: "get notification success!",
+          message: 'get notification success!',
           data: getMyNotification,
         });
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "get notification fail!",
+          message: 'get notification fail!',
         });
       }
     });
@@ -601,7 +601,7 @@ const interacService = {
         if (!findComment) {
           return resolve({
             messageCode: 3,
-            message: "comment not found!",
+            message: 'comment not found!',
           });
         } else {
           let userLikeComment = await db.User_like_comment.findOne({
@@ -618,7 +618,7 @@ const interacService = {
           if (userLikeComment) {
             return resolve({
               messageCode: 2,
-              message: "you were liked!",
+              message: 'you were liked!',
             });
           } else {
             await db.User_like_comment.create(
@@ -626,12 +626,12 @@ const interacService = {
                 user_id: req.user.user_id,
                 comment_id: req.body.comment_id,
               },
-              { transaction },
+              {transaction},
             );
             if (findComment.user_id != req.user.user_id) {
               await db.Notification.create(
                 {
-                  type: "likeComment",
+                  type: 'likeComment',
                   receive_user_id: findComment.user_id,
                   recipe_id: findRecipe.id,
                   create_user_id: req.user.user_id,
@@ -639,13 +639,13 @@ const interacService = {
                   create_time: Date.now(),
                   is_viewed: 0,
                 },
-                { transaction },
+                {transaction},
               );
             }
             await transaction.commit();
             return resolve({
               messageCode: 1,
-              message: "like success!",
+              message: 'like success!',
             });
           }
         }
@@ -654,7 +654,7 @@ const interacService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "like fail!",
+          message: 'like fail!',
         });
       }
     });
@@ -672,7 +672,7 @@ const interacService = {
         if (!findComment) {
           return resolve({
             messageCode: 3,
-            message: "comment not found!",
+            message: 'comment not found!',
           });
         } else {
           let userLikeComment = await db.User_like_comment.findOne({
@@ -689,17 +689,17 @@ const interacService = {
                   comment_id: req.body.comment_id,
                 },
               },
-              { transaction },
+              {transaction},
             );
             await transaction.commit();
             return resolve({
               messageCode: 1,
-              message: "dislike success!",
+              message: 'dislike success!',
             });
           } else {
             return resolve({
               messageCode: 2,
-              message: "you have not liked!",
+              message: 'you have not liked!',
             });
           }
         }
@@ -708,7 +708,7 @@ const interacService = {
         await transaction.rollback();
         reject({
           messageCode: 0,
-          message: "dislike fail!",
+          message: 'dislike fail!',
         });
       }
     });
@@ -724,20 +724,20 @@ const interacService = {
         if (!findNotification) {
           return resolve({
             messageCode: 2,
-            message: "notification not found!",
+            message: 'notification not found!',
           });
         } else {
           if (findNotification.receive_user_id != req.user.user_id) {
             return resolve({
               messageCode: 3,
-              message: "you are not allowed!",
+              message: 'you are not allowed!',
             });
           } else {
             findNotification.is_viewed = 1;
             await findNotification.save();
             return resolve({
               messageCode: 1,
-              message: "update notification success!",
+              message: 'update notification success!',
             });
           }
         }
@@ -745,7 +745,7 @@ const interacService = {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "update notification fail!",
+          message: 'update notification fail!',
         });
       }
     });
@@ -763,7 +763,7 @@ const interacService = {
         if (notificationLength == 0) {
           return resolve({
             messageCode: 2,
-            message: "no unseen notifications!",
+            message: 'no unseen notifications!',
           });
         }
         if (notificationLength > 0) {
@@ -774,14 +774,14 @@ const interacService = {
 
           return resolve({
             messageCode: 1,
-            message: "update all notification success!",
+            message: 'update all notification success!',
           });
         }
       } catch (error) {
         console.log(error);
         reject({
           messageCode: 0,
-          message: "update all notification fail!",
+          message: 'update all notification fail!',
         });
       }
     });
